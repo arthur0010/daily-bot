@@ -41,6 +41,15 @@ MONTHS_FA = [
 ]
 
 CITIES = {
+    "تهران": "Tehran",
+    "کرمانشاه": "Kermanshah",
+    "مشهد": "Mashhad",
+    "اصفهان": "Isfahan",
+    "تبریز": "Tabriz",
+    "شیراز": "Shiraz",
+}
+
+CITY_COORDS = {
     "تهران": (35.6892, 51.3890),
     "کرمانشاه": (34.3142, 47.0650),
     "مشهد": (36.2605, 59.6168),
@@ -50,12 +59,12 @@ CITIES = {
 }
 
 CRYPTOS = [
-    {"symbol": "BTC", "coinpaprika_id": "btc-bitcoin", "nobitex": "btc"},
-    {"symbol": "USDT", "coinpaprika_id": "usdt-tether", "nobitex": "usdt"},
-    {"symbol": "ETH", "coinpaprika_id": "eth-ethereum", "nobitex": "eth"},
-    {"symbol": "GRAM", "coinpaprika_id": "ton-toncoin", "nobitex": "ton"},
-    {"symbol": "XRP", "coinpaprika_id": "xrp-xrp", "nobitex": "xrp"},
-    {"symbol": "TRX", "coinpaprika_id": "trx-tron", "nobitex": "trx"},
+    {"symbol": "BTC", "coingecko_id": "bitcoin", "coinpaprika_id": "btc-bitcoin", "nobitex": "btc"},
+    {"symbol": "USDT", "coingecko_id": "tether", "coinpaprika_id": "usdt-tether", "nobitex": "usdt"},
+    {"symbol": "ETH", "coingecko_id": "ethereum", "coinpaprika_id": "eth-ethereum", "nobitex": "eth"},
+    {"symbol": "GRAM", "coingecko_id": "the-open-network", "coinpaprika_id": "ton-toncoin", "nobitex": "ton"},
+    {"symbol": "XRP", "coingecko_id": "ripple", "coinpaprika_id": "xrp-xrp", "nobitex": "xrp"},
+    {"symbol": "TRX", "coingecko_id": "tron", "coinpaprika_id": "trx-tron", "nobitex": "trx"},
 ]
 
 MOTIVATIONAL_MESSAGES = [
@@ -471,40 +480,53 @@ def get_todays_motivation():
 
 def get_weather():
     results = []
-    for city, (lat, lon) in CITIES.items():
+
+    desc_map = {
+        "Sunny": "آفتابی ☀️",
+        "Clear": "صاف ☀️",
+        "Partly cloudy": "نیمه‌ابری 🌤️",
+        "Cloudy": "ابری ☁️",
+        "Overcast": "ابری ☁️",
+        "Mist": "مه 🌫️",
+        "Fog": "مه 🌫️",
+        "Light rain": "باران سبک 🌦️",
+        "Light rain shower": "باران سبک 🌦️",
+        "Patchy rain nearby": "باران پراکنده 🌦️",
+        "Rain": "باران 🌧️",
+        "Moderate rain": "باران 🌧️",
+        "Heavy rain": "باران شدید 🌧️",
+        "Snow": "برف 🌨️",
+        "Light snow": "برف سبک 🌨️",
+        "Thunderstorm": "رعد و برق ⛈️",
+    }
+
+    for city_fa, city_en in CITIES.items():
         try:
-            url = (
-                f"https://api.open-meteo.com/v1/forecast"
-                f"?latitude={lat}&longitude={lon}"
-                f"&current=temperature_2m,weather_code"
-                f"&timezone=Asia/Tehran"
+            url = f"https://wttr.in/{city_en}?format=j1"
+            resp = requests.get(
+                url,
+                timeout=10,
+                headers={"User-Agent": "curl/7.68.0"}
             )
-            resp = requests.get(url, timeout=8)
             data = resp.json()
-            current = data.get("current", {})
-            temp = current.get("temperature_2m")
-            code = current.get("weather_code")
 
-            desc = {
-                0: "آفتابی ☀️", 1: "نیمه‌ابری 🌤️", 2: "ابری ⛅", 3: "ابری ☁️",
-                45: "مه 🌫️", 48: "مه یخ‌زده 🌫️",
-                51: "نم‌نم باران 🌦️", 53: "باران سبک 🌧️", 55: "باران 🌧️",
-                61: "باران ملایم 🌦️", 63: "باران 🌧️", 65: "باران شدید 🌧️",
-                71: "برف سبک 🌨️", 73: "برف 🌨️", 75: "برف شدید 🌨️",
-                95: "رعد و برق ⛈️", 96: "رعد و برق با تگرگ ⛈️",
-                99: "طوفان شدید ⛈️"
-            }.get(code, "نامشخص")
+            current = data.get("current_condition", [{}])[0]
+            temp = current.get("temp_C", "—")
+            desc_en = current.get("weatherDesc", [{}])[0].get("value", "")
 
-            results.append(f"🌡️ {city}: {int(temp)}°C | {desc}")
+            desc = desc_map.get(desc_en, desc_en or "نامشخص")
+
+            results.append(f"🌡️ {city_fa}: {temp}°C | {desc}")
         except Exception as e:
-            print(f"Weather {city}: {e}")
-            results.append(f"🌡️ {city}: —")
+            print(f"Weather {city_fa}: {e}")
+            results.append(f"🌡️ {city_fa}: —")
+
     return results
 
 
 def get_prayer_times():
     try:
-        lat, lon = CITIES["تهران"]
+        lat, lon = CITY_COORDS["تهران"]
         url = (
             f"https://api.aladhan.com/v1/timings"
             f"?latitude={lat}&longitude={lon}"
@@ -530,25 +552,53 @@ def get_prayer_times():
         return None
 
 
-def get_crypto_price_usd(coinpaprika_id):
-    cache_key = f"usd_{coinpaprika_id}"
+def get_crypto_prices_usd_batch():
+    """قیمت دلاری همه‌ی ارزها رو با یک درخواست Batch می‌گیره"""
+    cache_key = "usd_batch"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
+    gecko_ids = ",".join([c["coingecko_id"] for c in CRYPTOS])
+
     for attempt in range(2):
         try:
-            url = f"https://api.coinpaprika.com/v1/tickers/{coinpaprika_id}"
+            url = (
+                f"https://api.coingecko.com/api/v3/simple/price"
+                f"?ids={gecko_ids}&vs_currencies=usd"
+            )
+            resp = requests.get(url, timeout=10)
+            data = resp.json()
+
+            if isinstance(data, dict) and data:
+                prices = {}
+                for crypto in CRYPTOS:
+                    gid = crypto["coingecko_id"]
+                    if gid in data:
+                        prices[gid] = data[gid].get("usd")
+                    else:
+                        prices[gid] = None
+
+                _cache_set(cache_key, prices)
+                return prices
+        except Exception as e:
+            print(f"CoinGecko batch attempt {attempt + 1}: {e}")
+
+    prices = {}
+    for crypto in CRYPTOS:
+        cp_id = crypto["coinpaprika_id"]
+        try:
+            url = f"https://api.coinpaprika.com/v1/tickers/{cp_id}"
             resp = requests.get(url, timeout=6)
             data = resp.json()
             price = data.get("quotes", {}).get("USD", {}).get("price")
-            if price:
-                _cache_set(cache_key, price)
-                return price
+            prices[crypto["coingecko_id"]] = price
         except Exception as e:
-            print(f"CoinPaprika attempt {attempt + 1} {coinpaprika_id}: {e}")
+            print(f"CoinPaprika {cp_id}: {e}")
+            prices[crypto["coingecko_id"]] = None
 
-    return None
+    _cache_set(cache_key, prices)
+    return prices
 
 
 def get_crypto_price_toman(nobitex_symbol):
@@ -561,7 +611,7 @@ def get_crypto_price_toman(nobitex_symbol):
         try:
             url = "https://apiv2.nobitex.ir/market/stats"
             params = {"srcCurrency": nobitex_symbol, "dstCurrency": "rls"}
-            resp = requests.get(url, params=params, timeout=6)
+            resp = requests.get(url, params=params, timeout=8)
             data = resp.json()
 
             if data.get("status") == "ok":
@@ -591,9 +641,14 @@ def format_price(value):
 
 def build_crypto_section():
     lines = []
+
+    usd_prices = get_crypto_prices_usd_batch()
+
     for crypto in CRYPTOS:
         symbol = crypto["symbol"]
-        usd = get_crypto_price_usd(crypto["coinpaprika_id"])
+        gid = crypto["coingecko_id"]
+
+        usd = usd_prices.get(gid)
         toman = get_crypto_price_toman(crypto["nobitex"])
 
         usd_str = f"${format_price(usd)}" if usd else "—"
@@ -719,6 +774,12 @@ def restart_channel_job(chat_id):
     schedule_channel(chat_id, hour, minute)
 
 
+def back_button(target="menu_back"):
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔙 بازگشت به منوی قبل", callback_data=target)]
+    ])
+
+
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         await update.message.reply_text(
@@ -730,20 +791,22 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+def main_menu_keyboard():
+    return InlineKeyboardMarkup([
+        [InlineKeyboardButton("➕ افزودن کانال", callback_data="menu_add")],
+        [InlineKeyboardButton("📋 مدیریت کانال‌ها", callback_data="menu_list")],
+        [InlineKeyboardButton("📤 ارسال فوری", callback_data="menu_sendnow")],
+    ])
+
+
 async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
 
-    keyboard = [
-        [InlineKeyboardButton("➕ افزودن کانال", callback_data="menu_add")],
-        [InlineKeyboardButton("📋 مدیریت کانال‌ها", callback_data="menu_list")],
-        [InlineKeyboardButton("📤 ارسال فوری", callback_data="menu_sendnow")],
-    ]
-
     await update.message.reply_text(
         "مدیریت ربات\n\n"
         "لطفاً یکی از گزینه‌های زیر را انتخاب نمایید:",
-        reply_markup=InlineKeyboardMarkup(keyboard)
+        reply_markup=main_menu_keyboard()
     )
 
 
@@ -765,7 +828,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "• @my_channel\n"
             "• -1001234567890\n"
             "• https://t.me/my_channel\n\n"
-            "توجه: ربات باید از قبل در کانال عضو و به عنوان مدیر منصوب شده باشد."
+            "توجه: ربات باید از قبل در کانال عضو و به عنوان مدیر منصوب شده باشد.",
+            reply_markup=back_button("menu_back")
         )
 
     elif data == "menu_list":
@@ -773,7 +837,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not channels:
             await query.edit_message_text(
                 "مدیریت کانال‌ها\n\n"
-                "در حال حاضر هیچ کانالی ثبت نشده است."
+                "در حال حاضر هیچ کانالی ثبت نشده است.",
+                reply_markup=back_button("menu_back")
             )
             return
 
@@ -799,7 +864,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if not channels:
             await query.edit_message_text(
                 "ارسال فوری\n\n"
-                "در حال حاضر هیچ کانالی ثبت نشده است."
+                "در حال حاضر هیچ کانالی ثبت نشده است.",
+                reply_markup=back_button("menu_back")
             )
             return
 
@@ -856,7 +922,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"کانال: «{display}»\n"
             f"زمان فعلی: {current_time}\n\n"
             f"لطفاً زمان جدید را به قالب HH:MM ارسال نمایید.\n"
-            f"نمونه: 08:00"
+            f"نمونه: 08:00",
+            reply_markup=back_button(f"ch_{chat_id}")
         )
 
     elif data.startswith("del_"):
@@ -873,7 +940,8 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         await query.edit_message_text(
             "وضعیت: انجام شد\n\n"
-            "کانال مورد نظر از فهرست حذف گردید."
+            "کانال مورد نظر از فهرست حذف گردید.",
+            reply_markup=back_button("menu_list")
         )
 
     elif data.startswith("sendnow_"):
@@ -887,24 +955,21 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             )
             await query.edit_message_text(
                 "وضعیت: انجام شد\n\n"
-                "پیام مورد نظر با موفقیت ارسال گردید."
+                "پیام مورد نظر با موفقیت ارسال گردید.",
+                reply_markup=back_button("menu_sendnow")
             )
         except Exception as e:
             await query.edit_message_text(
                 f"وضعیت: خطا در ارسال\n\n"
-                f"جزئیات: {str(e)[:200]}"
+                f"جزئیات: {str(e)[:200]}",
+                reply_markup=back_button("menu_sendnow")
             )
 
     elif data == "menu_back":
-        keyboard = [
-            [InlineKeyboardButton("➕ افزودن کانال", callback_data="menu_add")],
-            [InlineKeyboardButton("📋 مدیریت کانال‌ها", callback_data="menu_list")],
-            [InlineKeyboardButton("📤 ارسال فوری", callback_data="menu_sendnow")],
-        ]
         await query.edit_message_text(
             "مدیریت ربات\n\n"
             "لطفاً یکی از گزینه‌های زیر را انتخاب نمایید:",
-            reply_markup=InlineKeyboardMarkup(keyboard)
+            reply_markup=main_menu_keyboard()
         )
 
 
@@ -919,7 +984,8 @@ async def process_channel_id(update, context, channel_input):
         except Exception:
             await update.message.reply_text(
                 "وضعیت: خطا در پردازش\n\n"
-                "لینک وارد شده نامعتبر است."
+                "لینک وارد شده نامعتبر است.",
+                reply_markup=back_button("menu_add")
             )
             return
 
@@ -942,17 +1008,24 @@ async def process_channel_id(update, context, channel_input):
                 title = str(chat_id)
 
             add_channel(chat_id, title=title)
-            await update.message.reply_text(message)
+            await update.message.reply_text(
+                message,
+                reply_markup=back_button("menu_back")
+            )
 
             hour, minute = get_channel_time(chat_id)
             schedule_channel(chat_id, hour, minute)
         except Exception as e:
             await update.message.reply_text(
                 f"وضعیت: خطا در ذخیره‌سازی\n\n"
-                f"جزئیات: {str(e)[:200]}"
+                f"جزئیات: {str(e)[:200]}",
+                reply_markup=back_button("menu_add")
             )
     else:
-        await update.message.reply_text(message)
+        await update.message.reply_text(
+            message,
+            reply_markup=back_button("menu_add")
+        )
 
 
 async def handle_admin_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -989,7 +1062,8 @@ async def handle_admin_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
             await update.message.reply_text(
                 f"وضعیت: انجام شد\n\n"
-                f"زمان ارسال کانال «{display}» به {hour:02d}:{minute:02d} تغییر یافت."
+                f"زمان ارسال کانال «{display}» به {hour:02d}:{minute:02d} تغییر یافت.",
+                reply_markup=back_button(f"ch_{chat_id}")
             )
 
             restart_channel_job(chat_id)
@@ -998,7 +1072,8 @@ async def handle_admin_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 "وضعیت: خطا در پردازش\n\n"
                 "قالب زمان نامعتبر است. لطفاً به صورت HH:MM ارسال نمایید.\n"
-                "نمونه: 08:00"
+                "نمونه: 08:00",
+                reply_markup=back_button(f"ch_{chat_id}")
             )
 
 
