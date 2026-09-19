@@ -1,4 +1,5 @@
 import os
+import time
 import asyncio
 import sqlite3
 import logging
@@ -223,6 +224,7 @@ MOTIVATIONAL_MESSAGES = [
 
 _cache = {}
 CACHE_TTL = 1800
+BATCH_CACHE_TTL = 1800
 
 scheduler = None
 channel_jobs = {}
@@ -231,18 +233,26 @@ app_telegram = None
 main_loop = None
 _bot_info_cache = [None]
 
+HTTP_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/120.0.0.0 Safari/537.36"
+    )
+}
+
 
 def _cache_get(key):
     if key in _cache:
         value, ts = _cache[key]
-        if (datetime.now().timestamp() - ts) < CACHE_TTL:
+        if (time.time() - ts) < CACHE_TTL:
             return value
         del _cache[key]
     return None
 
 
 def _cache_set(key, value):
-    _cache[key] = (value, datetime.now().timestamp())
+    _cache[key] = (value, time.time())
 
 
 def init_db():
@@ -581,15 +591,17 @@ def get_crypto_prices_usd_batch():
         price = None
 
         if binance_sym:
-            try:
-                url = f"https://api.binance.com/api/v3/ticker/price?symbol={binance_sym}"
-                resp = requests.get(url, timeout=8)
-                data = resp.json()
-                p = float(data.get("price", 0))
-                if p > 0:
-                    price = p
-            except Exception as e:
-                print(f"Binance {symbol}: {e}")
+            for attempt in range(2):
+                try:
+                    url = f"https://api.binance.com/api/v3/ticker/price?symbol={binance_sym}"
+                    resp = requests.get(url, timeout=8)
+                    data = resp.json()
+                    p = float(data.get("price", 0))
+                    if p > 0:
+                        price = p
+                        break
+                except Exception as e:
+                    print(f"Binance {symbol} attempt {attempt + 1}: {e}")
 
         if price is None:
             try:
@@ -606,30 +618,66 @@ def get_crypto_prices_usd_batch():
     return prices
 
 
-def get_crypto_price_toman(nobitex_symbol):
+def _get_usdt_toman():
+    cache_key = "toman_usdt"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    try:
+        url = "https://apiv2.nobitex.ir/market/stats"
+        params = {"srcCurrency": "usdt", "dstCurrency": "rls"}
+        resp = requests.get(url, params=params, timeout=8)
+        data = resp.json()
+
+        if data.get("status") == "ok":
+            stats = data.get("stats", {})
+            key = "usdt-rls"
+            if key in stats:
+                price_rls = stats[key].get("latest")
+                if price_rls:
+                    price_toman = int(float(price_rls)) // 10
+                    _cache_set(cache_key, price_toman)
+                    return price_toman
+    except Exception as e:
+        print(f"USDT Nobitex: {e}")
+
+    return None
+
+
+def get_crypto_price_toman(nobitex_symbol, usd_price=None):
+    if not nobitex_symbol:
+        return None
+
     cache_key = f"toman_{nobitex_symbol}"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
-    for attempt in range(2):
-        try:
-            url = "https://apiv2.nobitex.ir/market/stats"
-            params = {"srcCurrency": nobitex_symbol, "dstCurrency": "rls"}
-            resp = requests.get(url, params=params, timeout=8)
-            data = resp.json()
+    try:
+        url = "https://apiv2.nobitex.ir/market/stats"
+        params = {"srcCurrency": nobitex_symbol, "dstCurrency": "rls"}
+        resp = requests.get(url, params=params, timeout=8)
+        data = resp.json()
 
-            if data.get("status") == "ok":
-                stats = data.get("stats", {})
-                key = f"{nobitex_symbol}-rls"
-                if key in stats:
-                    price_rls = stats[key].get("latest")
-                    if price_rls:
-                        price_toman = int(float(price_rls)) // 10
-                        _cache_set(cache_key, price_toman)
-                        return price_toman
-        except Exception as e:
-            print(f"Nobitex attempt {attempt + 1} {nobitex_symbol}: {e}")
+        if data.get("status") == "ok":
+            stats = data.get("stats", {})
+            key = f"{nobitex_symbol}-rls"
+            if key in stats:
+                price_rls = stats[key].get("latest")
+                if price_rls:
+                    price_toman = int(float(price_rls)) // 10
+                    _cache_set(cache_key, price_toman)
+                    return price_toman
+    except Exception as e:
+        print(f"Nobitex {nobitex_symbol}: {e}")
+
+    if usd_price and nobitex_symbol != "usdt":
+        usdt_toman = _get_usdt_toman()
+        if usdt_toman:
+            price_toman = int(usd_price * usdt_toman)
+            _cache_set(cache_key, price_toman)
+            return price_toman
 
     return None
 
@@ -644,7 +692,7 @@ def get_gold_price_18k():
 
     try:
         url = "https://api.goldprice.dev/v1/carat?currency=USD"
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
         data = resp.json()
 
         if "price_gram_18k" in data:
@@ -653,12 +701,24 @@ def get_gold_price_18k():
         print(f"GoldPrice.dev: {e}")
 
     if gold_usd_per_gram is None:
+        try:
+            url = "https://api.metals.live/v1/spot/gold"
+            resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
+            data = resp.json()
+
+            if "price" in data:
+                gold_usd_per_ounce = float(data["price"])
+                gold_usd_per_gram = (gold_usd_per_ounce / 31.1035) * (18 / 24)
+        except Exception as e:
+            print(f"Metals.live gold: {e}")
+
+    if gold_usd_per_gram is None:
         return None
 
-    usd_to_toman = get_crypto_price_toman("usdt")
+    usdt_toman = _get_usdt_toman()
 
-    if usd_to_toman:
-        gold_toman = int(gold_usd_per_gram * usd_to_toman)
+    if usdt_toman:
+        gold_toman = int(gold_usd_per_gram * usdt_toman)
         result = {
             "price_usd": gold_usd_per_gram,
             "price_toman": gold_toman,
@@ -676,8 +736,25 @@ def get_oil_price_brent():
         return cached
 
     try:
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/BZ=F"
+        resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
+        data = resp.json()
+
+        result = data.get("chart", {}).get("result", [])
+        if result:
+            meta = result[0].get("meta", {})
+            price = meta.get("regularMarketPrice")
+            if price:
+                price = float(price)
+                if price > 0:
+                    _cache_set(cache_key, price)
+                    return price
+    except Exception as e:
+        print(f"Yahoo Brent: {e}")
+
+    try:
         url = "https://api.oilpriceapi.com/v1/demo/prices/BRENT_CRUDE_USD"
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
         data = resp.json()
 
         if data.get("status") == "success":
@@ -691,17 +768,18 @@ def get_oil_price_brent():
         print(f"OilPriceAPI: {e}")
 
     try:
-        url = "https://calcfi.app/api/rates/crude-oil-brent"
-        resp = requests.get(url, timeout=10)
+        url = "https://api.exchangerate.host/latest?base=USD&symbols=BRENT"
+        resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
         data = resp.json()
 
-        if "value" in data:
-            price = float(data["value"])
+        rates = data.get("rates", {})
+        if "BRENT" in rates:
+            price = float(rates["BRENT"])
             if price > 0:
                 _cache_set(cache_key, price)
                 return price
     except Exception as e:
-        print(f"CalcFi oil: {e}")
+        print(f"Exchangerate BRENT: {e}")
 
     return None
 
@@ -726,7 +804,7 @@ def build_crypto_section():
         gid = crypto["coingecko_id"]
 
         usd = usd_prices.get(gid)
-        toman = get_crypto_price_toman(crypto["nobitex"])
+        toman = get_crypto_price_toman(crypto["nobitex"], usd)
 
         usd_str = f"${format_price(usd)}" if usd else "—"
         toman_str = f"{toman:,} تومان" if toman else "—"
