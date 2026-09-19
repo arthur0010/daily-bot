@@ -374,7 +374,7 @@ async def check_channel_status(bot, chat_id):
         if not is_admin:
             return "not_admin", (
                 f"وضعیت: عدم دسترسی مدیریتی\n\n"
-                f"کانال: «{chat.title}»\n\n"
+                f"کانال: «{chat.title or chat_id}»\n\n"
                 f"ربات در این کانال دارای دسترسی مدیریتی نیست.\n"
                 f"لطفاً جهت فعال‌سازی، مراحل زیر را انجام دهید:\n\n"
                 f"۱. ورود به تنظیمات کانال\n"
@@ -391,7 +391,7 @@ async def check_channel_status(bot, chat_id):
         if not can_post:
             return "not_admin", (
                 f"وضعیت: عدم دسترسی ارسال\n\n"
-                f"کانال: «{chat.title}»\n\n"
+                f"کانال: «{chat.title or chat_id}»\n\n"
                 f"ربات در این کانال دارای دسترسی مدیریتی است، "
                 f"اما مجوز ارسال پیام برای آن فعال نشده است.\n"
                 f"لطفاً دسترسی «ارسال پیام» را فعال نمایید."
@@ -399,7 +399,7 @@ async def check_channel_status(bot, chat_id):
 
         return "ok", (
             f"وضعیت: تأیید شد\n\n"
-            f"کانال: «{chat.title}»\n\n"
+            f"کانال: «{chat.title or chat_id}»\n\n"
             f"ربات با موفقیت به فهرست کانال‌ها افزوده شد."
         )
 
@@ -409,7 +409,7 @@ async def check_channel_status(bot, chat_id):
         if "member list is inaccessible" in error_str or "chat admin" in error_str:
             return "not_admin", (
                 f"وضعیت: عدم دسترسی مدیریتی\n\n"
-                f"کانال: «{chat.title}»\n\n"
+                f"کانال: «{chat.title or chat_id}»\n\n"
                 f"ربات در این کانال دارای دسترسی مدیریتی نیست.\n"
                 f"لطفاً جهت فعال‌سازی، مراحل زیر را انجام دهید:\n\n"
                 f"۱. ورود به تنظیمات کانال\n"
@@ -536,16 +536,18 @@ def get_crypto_price_usd(coinpaprika_id):
     if cached:
         return cached
 
-    try:
-        url = f"https://api.coinpaprika.com/v1/tickers/{coinpaprika_id}"
-        resp = requests.get(url, timeout=8)
-        data = resp.json()
-        price = data.get("quotes", {}).get("USD", {}).get("price")
-        if price:
-            _cache_set(cache_key, price)
-            return price
-    except Exception as e:
-        print(f"CoinPaprika {coinpaprika_id}: {e}")
+    for attempt in range(2):
+        try:
+            url = f"https://api.coinpaprika.com/v1/tickers/{coinpaprika_id}"
+            resp = requests.get(url, timeout=6)
+            data = resp.json()
+            price = data.get("quotes", {}).get("USD", {}).get("price")
+            if price:
+                _cache_set(cache_key, price)
+                return price
+        except Exception as e:
+            print(f"CoinPaprika attempt {attempt + 1} {coinpaprika_id}: {e}")
+
     return None
 
 
@@ -555,23 +557,25 @@ def get_crypto_price_toman(nobitex_symbol):
     if cached:
         return cached
 
-    try:
-        url = "https://apiv2.nobitex.ir/market/stats"
-        params = {"srcCurrency": nobitex_symbol, "dstCurrency": "rls"}
-        resp = requests.get(url, params=params, timeout=8)
-        data = resp.json()
+    for attempt in range(2):
+        try:
+            url = "https://apiv2.nobitex.ir/market/stats"
+            params = {"srcCurrency": nobitex_symbol, "dstCurrency": "rls"}
+            resp = requests.get(url, params=params, timeout=6)
+            data = resp.json()
 
-        if data.get("status") == "ok":
-            stats = data.get("stats", {})
-            key = f"{nobitex_symbol}-rls"
-            if key in stats:
-                price_rls = stats[key].get("latest")
-                if price_rls:
-                    price_toman = int(float(price_rls)) // 10
-                    _cache_set(cache_key, price_toman)
-                    return price_toman
-    except Exception as e:
-        print(f"Nobitex {nobitex_symbol}: {e}")
+            if data.get("status") == "ok":
+                stats = data.get("stats", {})
+                key = f"{nobitex_symbol}-rls"
+                if key in stats:
+                    price_rls = stats[key].get("latest")
+                    if price_rls:
+                        price_toman = int(float(price_rls)) // 10
+                        _cache_set(cache_key, price_toman)
+                        return price_toman
+        except Exception as e:
+            print(f"Nobitex attempt {attempt + 1} {nobitex_symbol}: {e}")
+
     return None
 
 
@@ -928,7 +932,16 @@ async def process_channel_id(update, context, channel_input):
     if status == "ok":
         try:
             chat = await context.bot.get_chat(chat_id)
-            add_channel(chat_id, title=chat.title or "")
+
+            title = chat.title
+            if not title:
+                title = getattr(chat, "full_name", None)
+            if not title:
+                title = getattr(chat, "username", None)
+            if not title:
+                title = str(chat_id)
+
+            add_channel(chat_id, title=title)
             await update.message.reply_text(message)
 
             hour, minute = get_channel_time(chat_id)
