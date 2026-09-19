@@ -60,12 +60,12 @@ CITY_COORDS = {
 }
 
 CRYPTOS = [
-    {"symbol": "BTC", "coingecko_id": "bitcoin", "coinpaprika_id": "btc-bitcoin", "nobitex": "btc", "binance": "BTCUSDT"},
-    {"symbol": "USDT", "coingecko_id": "tether", "coinpaprika_id": "usdt-tether", "nobitex": "usdt", "binance": None},
-    {"symbol": "ETH", "coingecko_id": "ethereum", "coinpaprika_id": "eth-ethereum", "nobitex": "eth", "binance": "ETHUSDT"},
-    {"symbol": "GRAM", "coingecko_id": "the-open-network", "coinpaprika_id": "ton-toncoin", "nobitex": "ton", "binance": "TONUSDT"},
-    {"symbol": "XRP", "coingecko_id": "ripple", "coinpaprika_id": "xrp-xrp", "nobitex": "xrp", "binance": "XRPUSDT"},
-    {"symbol": "TRX", "coingecko_id": "tron", "coinpaprika_id": "trx-tron", "nobitex": "trx", "binance": "TRXUSDT"},
+    {"symbol": "BTC", "coingecko_id": "bitcoin", "coinpaprika_id": "btc-bitcoin", "binance": "BTCUSDT"},
+    {"symbol": "USDT", "coingecko_id": "tether", "coinpaprika_id": "usdt-tether", "binance": None},
+    {"symbol": "ETH", "coingecko_id": "ethereum", "coinpaprika_id": "eth-ethereum", "binance": "ETHUSDT"},
+    {"symbol": "GRAM", "coingecko_id": "the-open-network", "coinpaprika_id": "ton-toncoin", "binance": "TONUSDT"},
+    {"symbol": "XRP", "coingecko_id": "ripple", "coinpaprika_id": "xrp-xrp", "binance": "XRPUSDT"},
+    {"symbol": "TRX", "coingecko_id": "tron", "coinpaprika_id": "trx-tron", "binance": "TRXUSDT"},
 ]
 
 MOTIVATIONAL_MESSAGES = [
@@ -224,7 +224,6 @@ MOTIVATIONAL_MESSAGES = [
 
 _cache = {}
 CACHE_TTL = 1800
-BATCH_CACHE_TTL = 1800
 
 scheduler = None
 channel_jobs = {}
@@ -369,15 +368,35 @@ async def check_channel_status(bot, chat_id):
         if "chat not found" in error_str:
             return "error", (
                 "وضعیت: خطا در شناسایی\n\n"
-                "کانال مورد نظر یافت نشد.\n\n"
+                "موردی با این شناسه یافت نشد.\n\n"
                 "دلایل احتمالی:\n"
                 "• شناسه وارد شده نامعتبر است\n"
-                "• ربات عضو کانال نیست\n"
-                "• کانال خصوصی است و ربات به آن دسترسی ندارد"
+                "• ربات عضو این مقصد نیست\n"
+                "• مقصد خصوصی است و ربات به آن دسترسی ندارد"
             )
         return "error", (
             f"وضعیت: خطای غیرمنتظره\n\n"
             f"جزئیات: {str(e)[:200]}"
+        )
+
+    chat_type = chat.type
+    chat_title = chat.title or str(chat_id)
+
+    if chat_type == "private":
+        return "error", (
+            "وضعیت: نوع نامعتبر\n\n"
+            "شناسه ارسال شده مربوط به یک چت خصوصی است.\n"
+            "لطفاً شناسه یا لینک یک کانال را ارسال نمایید."
+        )
+
+    if chat_type in ("group", "supergroup"):
+        return "error", (
+            f"وضعیت: نوع نامعتبر\n\n"
+            f"نوع: گروه\n"
+            f"نام: «{chat_title}»\n\n"
+            f"شناسه ارسال شده مربوط به یک گروه است، نه کانال.\n"
+            f"این ربات تنها از کانال‌ها پشتیبانی می‌کند.\n\n"
+            f"لطفاً شناسه یا لینک یک کانال معتبر را ارسال نمایید."
         )
 
     if _bot_info_cache[0] is None:
@@ -393,7 +412,7 @@ async def check_channel_status(bot, chat_id):
         if not is_admin:
             return "not_admin", (
                 f"وضعیت: عدم دسترسی مدیریتی\n\n"
-                f"کانال: «{chat.title or chat_id}»\n\n"
+                f"کانال: «{chat_title}»\n\n"
                 f"ربات در این کانال دارای دسترسی مدیریتی نیست.\n"
                 f"لطفاً جهت فعال‌سازی، مراحل زیر را انجام دهید:\n\n"
                 f"۱. ورود به تنظیمات کانال\n"
@@ -410,7 +429,7 @@ async def check_channel_status(bot, chat_id):
         if not can_post:
             return "not_admin", (
                 f"وضعیت: عدم دسترسی ارسال\n\n"
-                f"کانال: «{chat.title or chat_id}»\n\n"
+                f"کانال: «{chat_title}»\n\n"
                 f"ربات در این کانال دارای دسترسی مدیریتی است، "
                 f"اما مجوز ارسال پیام برای آن فعال نشده است.\n"
                 f"لطفاً دسترسی «ارسال پیام» را فعال نمایید."
@@ -418,7 +437,7 @@ async def check_channel_status(bot, chat_id):
 
         return "ok", (
             f"وضعیت: تأیید شد\n\n"
-            f"کانال: «{chat.title or chat_id}»\n\n"
+            f"کانال: «{chat_title}»\n\n"
             f"ربات با موفقیت به فهرست کانال‌ها افزوده شد."
         )
 
@@ -428,7 +447,7 @@ async def check_channel_status(bot, chat_id):
         if "member list is inaccessible" in error_str or "chat admin" in error_str:
             return "not_admin", (
                 f"وضعیت: عدم دسترسی مدیریتی\n\n"
-                f"کانال: «{chat.title or chat_id}»\n\n"
+                f"کانال: «{chat_title}»\n\n"
                 f"ربات در این کانال دارای دسترسی مدیریتی نیست.\n"
                 f"لطفاً جهت فعال‌سازی، مراحل زیر را انجام دهید:\n\n"
                 f"۱. ورود به تنظیمات کانال\n"
@@ -645,41 +664,26 @@ def _get_usdt_toman():
     return None
 
 
-def get_crypto_price_toman(nobitex_symbol, usd_price=None):
-    if not nobitex_symbol:
-        return None
-
-    cache_key = f"toman_{nobitex_symbol}"
+def _get_usd_to_toman():
+    """نرخ دقیق دلار به تومان: usdt_toman / usdt_usd"""
+    cache_key = "usd_to_toman"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
-    try:
-        url = "https://apiv2.nobitex.ir/market/stats"
-        params = {"srcCurrency": nobitex_symbol, "dstCurrency": "rls"}
-        resp = requests.get(url, params=params, timeout=8)
-        data = resp.json()
+    usdt_toman = _get_usdt_toman()
+    if not usdt_toman:
+        return None
 
-        if data.get("status") == "ok":
-            stats = data.get("stats", {})
-            key = f"{nobitex_symbol}-rls"
-            if key in stats:
-                price_rls = stats[key].get("latest")
-                if price_rls:
-                    price_toman = int(float(price_rls)) // 10
-                    _cache_set(cache_key, price_toman)
-                    return price_toman
-    except Exception as e:
-        print(f"Nobitex {nobitex_symbol}: {e}")
+    usd_prices = get_crypto_prices_usd_batch()
+    usdt_usd = usd_prices.get("tether", 1.0) or 1.0
 
-    if usd_price and nobitex_symbol != "usdt":
-        usdt_toman = _get_usdt_toman()
-        if usdt_toman:
-            price_toman = int(usd_price * usdt_toman)
-            _cache_set(cache_key, price_toman)
-            return price_toman
+    if usdt_usd <= 0:
+        return None
 
-    return None
+    rate = int(usdt_toman / usdt_usd)
+    _cache_set(cache_key, rate)
+    return rate
 
 
 def get_gold_price_18k():
@@ -715,18 +719,65 @@ def get_gold_price_18k():
     if gold_usd_per_gram is None:
         return None
 
-    usdt_toman = _get_usdt_toman()
+    usd_to_toman = _get_usd_to_toman()
+    if not usd_to_toman:
+        return None
 
-    if usdt_toman:
-        gold_toman = int(gold_usd_per_gram * usdt_toman)
-        result = {
-            "price_usd": gold_usd_per_gram,
-            "price_toman": gold_toman,
-        }
-        _cache_set(cache_key, result)
-        return result
+    gold_toman = int(gold_usd_per_gram * usd_to_toman)
+    result = {
+        "price_usd": gold_usd_per_gram,
+        "price_toman": gold_toman,
+    }
+    _cache_set(cache_key, result)
+    return result
 
-    return None
+
+def get_silver_price():
+    cache_key = "silver_price"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    silver_usd_per_gram = None
+
+    try:
+        url = "https://api.metals.live/v1/spot/silver"
+        resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
+        data = resp.json()
+
+        if "price" in data:
+            silver_usd_per_ounce = float(data["price"])
+            silver_usd_per_gram = silver_usd_per_ounce / 31.1035
+    except Exception as e:
+        print(f"Metals.live silver: {e}")
+
+    if silver_usd_per_gram is None:
+        try:
+            url = "https://api.goldprice.dev/v1/spot/silver?currency=USD"
+            resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
+            data = resp.json()
+
+            if "price_gram_24k" in data:
+                silver_usd_per_gram = float(data["price_gram_24k"])
+            elif "price" in data:
+                silver_usd_per_gram = float(data["price"]) / 31.1035
+        except Exception as e:
+            print(f"GoldPrice.dev silver: {e}")
+
+    if silver_usd_per_gram is None:
+        return None
+
+    usd_to_toman = _get_usd_to_toman()
+    if not usd_to_toman:
+        return None
+
+    silver_toman = int(silver_usd_per_gram * usd_to_toman)
+    result = {
+        "price_usd": silver_usd_per_gram,
+        "price_toman": silver_toman,
+    }
+    _cache_set(cache_key, result)
+    return result
 
 
 def get_oil_price_brent():
@@ -767,20 +818,6 @@ def get_oil_price_brent():
     except Exception as e:
         print(f"OilPriceAPI: {e}")
 
-    try:
-        url = "https://api.exchangerate.host/latest?base=USD&symbols=BRENT"
-        resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
-        data = resp.json()
-
-        rates = data.get("rates", {})
-        if "BRENT" in rates:
-            price = float(rates["BRENT"])
-            if price > 0:
-                _cache_set(cache_key, price)
-                return price
-    except Exception as e:
-        print(f"Exchangerate BRENT: {e}")
-
     return None
 
 
@@ -798,18 +835,32 @@ def build_crypto_section():
     lines = []
 
     usd_prices = get_crypto_prices_usd_batch()
+    usd_to_toman = _get_usd_to_toman()
 
     for crypto in CRYPTOS:
         symbol = crypto["symbol"]
         gid = crypto["coingecko_id"]
 
         usd = usd_prices.get(gid)
-        toman = get_crypto_price_toman(crypto["nobitex"], usd)
+
+        if usd and usd_to_toman:
+            toman = int(usd * usd_to_toman)
+        else:
+            toman = None
 
         usd_str = f"${format_price(usd)}" if usd else "—"
         toman_str = f"{toman:,} تومان" if toman else "—"
 
         lines.append(f"{symbol}: {usd_str} / {toman_str}")
+
+    silver = get_silver_price()
+    if silver:
+        lines.append(
+            f"SILVER: ${format_price(silver['price_usd'])} / "
+            f"{silver['price_toman']:,} تومان"
+        )
+    else:
+        lines.append("SILVER: —")
 
     gold = get_gold_price_18k()
     if gold:
