@@ -342,28 +342,34 @@ def delete_channel(chat_id):
     conn.close()
 
 
-def get_cached_bot_info(bot):
-    return _bot_info_cache[0]
-
-
 async def check_channel_status(bot, chat_id):
     try:
         chat = await bot.get_chat(chat_id)
-        admins = await bot.get_chat_administrators(chat_id)
+    except Exception as e:
+        error_str = str(e).lower()
+        if "chat not found" in error_str:
+            return "error", (
+                "وضعیت: خطا در شناسایی\n\n"
+                "کانال مورد نظر یافت نشد.\n\n"
+                "دلایل احتمالی:\n"
+                "• شناسه وارد شده نامعتبر است\n"
+                "• ربات عضو کانال نیست\n"
+                "• کانال خصوصی است و ربات به آن دسترسی ندارد"
+            )
+        return "error", (
+            f"وضعیت: خطای غیرمنتظره\n\n"
+            f"جزئیات: {str(e)[:200]}"
+        )
 
-        if _bot_info_cache[0] is None:
-            _bot_info_cache[0] = await bot.get_me()
-        bot_id = _bot_info_cache[0].id
+    if _bot_info_cache[0] is None:
+        _bot_info_cache[0] = await bot.get_me()
+    bot_id = _bot_info_cache[0].id
 
-        is_admin = False
-        can_post = False
+    try:
+        member = await bot.get_chat_member(chat_id, bot_id)
+        status = member.status
 
-        for admin in admins:
-            if admin.user.id == bot_id:
-                is_admin = True
-                if admin.can_post_messages:
-                    can_post = True
-                break
+        is_admin = status in ("administrator", "creator")
 
         if not is_admin:
             return "not_admin", (
@@ -376,6 +382,11 @@ async def check_channel_status(bot, chat_id):
                 f"۳. افزودن ربات به عنوان مدیر\n"
                 f"۴. فعال‌سازی دسترسی «ارسال پیام»"
             )
+
+        can_post = getattr(member, "can_post_messages", False)
+
+        if status == "creator":
+            can_post = True
 
         if not can_post:
             return "not_admin", (
@@ -395,24 +406,16 @@ async def check_channel_status(bot, chat_id):
     except Exception as e:
         error_str = str(e).lower()
 
-        if "chat not found" in error_str:
-            return "error", (
-                "وضعیت: خطا در شناسایی\n\n"
-                "کانال مورد نظر یافت نشد.\n\n"
-                "دلایل احتمالی:\n"
-                "• شناسه وارد شده نامعتبر است\n"
-                "• ربات عضو کانال نیست\n"
-                "• کانال خصوصی است و ربات به آن دسترسی ندارد"
-            )
-
-        if "not enough rights" in error_str or "forbidden" in error_str:
-            return "not_member", (
-                "وضعیت: عدم عضویت\n\n"
-                "ربات عضو کانال مورد نظر نیست یا دسترسی کافی ندارد.\n\n"
-                "لطفاً جهت رفع مشکل:\n"
-                "۱. ربات را به کانال اضافه نمایید\n"
-                "۲. ربات را به عنوان مدیر منصوب کنید\n"
-                "۳. مجدداً تلاش نمایید"
+        if "member list is inaccessible" in error_str or "chat admin" in error_str:
+            return "not_admin", (
+                f"وضعیت: عدم دسترسی مدیریتی\n\n"
+                f"کانال: «{chat.title}»\n\n"
+                f"ربات در این کانال دارای دسترسی مدیریتی نیست.\n"
+                f"لطفاً جهت فعال‌سازی، مراحل زیر را انجام دهید:\n\n"
+                f"۱. ورود به تنظیمات کانال\n"
+                f"۲. بخش مدیریت (Administrators)\n"
+                f"۳. افزودن ربات به عنوان مدیر\n"
+                f"۴. فعال‌سازی دسترسی «ارسال پیام»"
             )
 
         return "error", (
