@@ -523,9 +523,7 @@ def get_weather():
             temp = current.get("temp_C", "—")
             desc_en = current.get("weatherDesc", [{}])[0].get("value", "").strip()
 
-            desc = desc_map.get(desc_en)
-            if not desc:
-                desc = "نامشخص"
+            desc = desc_map.get(desc_en, "نامشخص")
 
             results.append(f"🌡️ {city_fa}: {temp}°C | {desc}")
         except Exception as e:
@@ -636,6 +634,78 @@ def get_crypto_price_toman(nobitex_symbol):
     return None
 
 
+def get_gold_price_18k():
+    cache_key = "gold_18k"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    gold_usd_per_gram = None
+
+    try:
+        url = "https://api.goldprice.dev/v1/carat?currency=USD"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+
+        if "price_gram_18k" in data:
+            gold_usd_per_gram = float(data["price_gram_18k"])
+    except Exception as e:
+        print(f"GoldPrice.dev: {e}")
+
+    if gold_usd_per_gram is None:
+        return None
+
+    usd_to_toman = get_crypto_price_toman("usdt")
+
+    if usd_to_toman:
+        gold_toman = int(gold_usd_per_gram * usd_to_toman)
+        result = {
+            "price_usd": gold_usd_per_gram,
+            "price_toman": gold_toman,
+        }
+        _cache_set(cache_key, result)
+        return result
+
+    return None
+
+
+def get_oil_price_brent():
+    cache_key = "oil_brent"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    try:
+        url = "https://api.oilpriceapi.com/v1/demo/prices/BRENT_CRUDE_USD"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+
+        if data.get("status") == "success":
+            prices = data.get("data", {}).get("prices", [])
+            if prices:
+                price = float(prices[0].get("price", 0))
+                if price > 0:
+                    _cache_set(cache_key, price)
+                    return price
+    except Exception as e:
+        print(f"OilPriceAPI: {e}")
+
+    try:
+        url = "https://calcfi.app/api/rates/crude-oil-brent"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+
+        if "value" in data:
+            price = float(data["value"])
+            if price > 0:
+                _cache_set(cache_key, price)
+                return price
+    except Exception as e:
+        print(f"CalcFi oil: {e}")
+
+    return None
+
+
 def format_price(value):
     if value is None:
         return "—"
@@ -663,8 +733,20 @@ def build_crypto_section():
 
         lines.append(f"{symbol}: {usd_str} / {toman_str}")
 
-    lines.append("GOLD (18): —")
-    lines.append("OIL (Brent): —")
+    gold = get_gold_price_18k()
+    if gold:
+        lines.append(
+            f"GOLD (18): ${format_price(gold['price_usd'])} / "
+            f"{gold['price_toman']:,} تومان"
+        )
+    else:
+        lines.append("GOLD (18): —")
+
+    oil = get_oil_price_brent()
+    if oil:
+        lines.append(f"OIL (Brent): ${format_price(oil)}")
+    else:
+        lines.append("OIL (Brent): —")
 
     return lines
 
