@@ -68,162 +68,9 @@ CRYPTOS = [
     {"symbol": "TRX", "coingecko_id": "tron", "coinpaprika_id": "trx-tron", "binance": "TRXUSDT"},
 ]
 
-MOTIVATIONAL_MESSAGES = [
-    "به خودت ایمان داشته باش\nتو از آن چیزی که فکر می‌کنی قوی‌تری",
-    "هر روز یک شروع جدید است\nدیروز تمام شد، امروز از آن توست",
-    "هیچ‌وقت دیر نیست\nبهترین زمان برای شروع، همین لحظه است",
-    "رؤیاهایت ارزش تلاش دارند\nبرای رسیدن به آن‌ها بکوش",
-    "موفقیت یک‌شبه به دست نمی‌آید\nولی هر روز یک قدم به آن نزدیک‌تر می‌شوی",
-    "به خودت سخت نگیر\nتو داری بهترین تلاشت را می‌کنی",
-    "زندگی کوتاه‌تر از آن است که ناراحت باشی\nلبخند بزن",
-    "هر سختی، درسی در خود دارد\nاز آن بیاموز و ادامه بده",
-    "تو قوی‌تر از مشکلات هستی\nفقط باید باور کنی",
-    "امروز را با انرژی آغاز کن\nفردا از امروزت سپاسگزار خواهد بود",
-    "نگران نباش، همه چیز درست می‌شود\nفقط به زمان نیاز داری",
-    "خودت را با کسی مقایسه نکن\nهر کس مسیر خودش را دارد",
-    "گاهی شکست، بهترین معلم است\nاز آن فرار نکن",
-    "بهترین نسخه‌ی خودت باش\nنیازی نیست شبیه کسی باشی",
-    "هر روز که بیدار می‌شوی، فرصتی تازه است\nاز آن بهره ببر",
-    "آرامش را در درون خود جستجو کن\nنه در بیرون",
-    "کارهایی که امروز انجام می‌دهی\nآینده‌ات را می‌سازند",
-    "به خودت وقت بده\nمهم‌ترین چیز در زندگی، خودت هستی",
-    "هیچ‌کس کامل نیست\nولی همه می‌توانند بهتر شوند",
-    "امید داشته باش\nبهترین روزها در راهند",
-    "زندگی سرشار از فرصت‌هاست\nفقط باید آن‌ها را ببینی",
-    "گاهی باید رها کرد\nتا چیزهای بهتر بیایند",
-    "به مسیری که رفته‌ای افتخار کن\nهمه‌ی راه‌ها ارزشمندند",
-    "قلبت را دنبال کن\nهمیشه راه درست را نشانت می‌دهد",
-    "هیچ طوفانی همیشگی نیست\nخورشید دوباره خواهد درخشید",
-    "به خودت اعتماد کن\nتو می‌توانی",
-    "یک قدم کوچک هم، یک قدم است\nاز جا برخیز",
-    "امروز روز توست\nاز آن نهایت استفاده را ببر",
-    "زندگی برای زندگی کردن است\nنه برای نگرانی",
-    "هر پایانی، شروعی تازه است\nبه استقبالش برو",
-    "شروع کن، حتی اگر کامل نباشی\nکامل شدن در مسیر اتفاق می‌افتد",
-    "شکست، پایان راه نیست\nفقط یک پیچ در مسیر است",
-    "تو همانی که باید باشی\nبه خودت افتخار کن",
-    "قلبِ شکسته، درسِ بزرگی دارد\nاز آن محکم‌تر بیرون می‌آیی",
-    "هر روز فرصتی برای تغییر است\nاز همین امروز شروع کن",
-    "به جای گریه بر گذشته\nبرای آینده لبخند بزن",
-    "خودت را دوست داشته باش\nهمان‌طور که هستی",
-    "در میان سختی‌ها، زیبایی را ببین\nاین هنر زندگی است",
-    "آرام باش، تو در مسیر درستی هستی\nفقط به خودت ایمان داشته باش",
-    "آنچه می‌کاری، برداشت می‌کنی\nامروز بذری از خوبی بکار",
-    "هر نفسی، هدیه‌ای است\nشکرگزار باش",
-    "از اشتباهاتت درس بگیر\nولی خودت را سرزنش نکن",
-    "مسیر مهم‌تر از مقصد است\nاز مسیر لذت ببر",
-    "آنچه می‌ترسی از آن، در واقع در حال رشد توست\nپیش برو",
-    "لبخندت، سلاح مخفی توست\nاز آن استفاده کن",
-    "در اوج تردید، ایمان را انتخاب کن\nو پیش برو",
-    "زندگی مجموعی از لحظه‌هاست\nاین لحظه را زندگی کن",
-    "خودت را ببخش\nتو هم انسان هستی",
-    "رشد، در ناپایداری است\nاز منطقه‌ی امن بیرون بیا",
-    "هر روز، بهترین روز زندگی است\nاگر خودت بخواهی",
-    "هیچ‌کس نمی‌داند فردا چه می‌شود\nولی امروز در دستان توست",
-    "با شکوه زندگی کن، نه با ترس\nزندگی برای زندگی کردن است",
-    "به دیگران نیکی کن\nدنیا پر از خوبی است",
-    "هر صبح، فرصت دوباره است\nآن را هدر نده",
-    "تو نور خاص خودت را داری\nآن را پنهان نکن",
-    "باور کن که می‌توانی\nچون واقعاً می‌توانی",
-    "زندگی، آینه‌ی افکار توست\nفکرت را زیبا کن",
-    "از شکست نترس\nبزرگ‌ترین‌ها بارها شکست خورده‌اند",
-    "در سکوت، پاسخ‌ها را خواهی یافت\nآرام باش",
-    "هر روز خودت را بهتر کن\nحتی یک قدم کوچک",
-    "کاری که می‌توانی، امروز انجام بده\nفردا تضمینی نیست",
-    "مهربان باش، به خود و به دیگران\nاین زیبایی است",
-    "به هیچ‌کس اجازه نده رویاهایت را کوچک کند\nادامه بده",
-    "سرنوشت در دستان توست\nانتخاب کن",
-    "آرزو نکن، تلاش کن\nآرزو به تنهایی کافی نیست",
-    "در دل سختی، فرصت پنهان است\nآن را پیدا کن",
-    "خودت را باور کن\nو جهان با تو هماهنگ می‌شود",
-    "از چیزی که می‌خواهی دور نشو\nبه سمتش بدو",
-    "شادی، انتخابی است\nپس انتخابش کن",
-    "زندگی، سفر است نه مسابقه\nآرام پیش برو",
-    "هر روز، چیزی برای یادگیری داری\nذهنت را باز نگه دار",
-    "بخشش، آزادی می‌آورد\nخودت را آزاد کن",
-    "به خودت فرصت بده\nرشد، زمان می‌خواهد",
-    "درون تو، قدرتی نهفته است\nآن را بیدار کن",
-    "زندگی، زیبایی در سادگی است\nساده ببین",
-    "بهترین سرمایه‌گذاری، خودت هستی\nروی خودت کار کن",
-    "با عشق زندگی کن\nعشق، همه چیز را زیبا می‌کند",
-    "از هیچ چیز پشیمان نباش\nهمه چیز درسی بوده",
-    "با شور و اشتیاق زندگی کن\nشور، زندگی را زیبا می‌کند",
-    "امروز، خودت را وقف رویاهایت کن\nآن‌ها ارزشش را دارند",
-    "سفر هزار مایل، با یک قدم آغاز می‌شود\nپس شروع کن",
-    "به جای حسرت، شکرگزاری کن\nزندگی همین است",
-    "سرعتت مهم نیست\nجهت مهم است",
-    "در انتظار بهترین‌ها باش\nولی برای آن‌ها تلاش کن",
-    "زندگی، یک فرصت است\nآن را قدر بدان",
-    "به خودت احترام بگذار\nتو ارزش آن را داری",
-    "از مسیر لذت ببر، نه از مقصد\nاین راز شادی است",
-    "در مقابل سختی‌ها، تسلیم نشو\nتو قوی‌تر هستی",
-    "هر صبح، یک هدیه است\nشکرگزار باش",
-    "با اعتماد به نفس پیش برو\nجهان راه را برایت باز می‌کند",
-    "هیچ محدودیتی وجود ندارد\nفقط ذهن توست",
-    "با توکل پیش برو\nراه هموار می‌شود",
-    "تو می‌توانی، چون باور داری\nایمانت قوی است",
-    "بهترین روزهای زندگی، هنوز نیامده‌اند\nامیدوار باش",
-    "از شکست نترس\nاین پل موفقیت است",
-    "روی خودت سرمایه‌گذاری کن\nارزشمندترین کار",
-    "در هر شرایطی، زیبایی را ببین\nاین قدرت توست",
-    "خودت را همان‌طور که هستی بپذیر\nکامل باش",
-    "با آرامش، مسیرت را ادامه بده\nآرامش، قدرت است",
-    "تو یک معجزه هستی\nباور کن",
-    "هیچ چیز غیرممکن نیست\nفقط ذهن باید باور کند",
-    "در هر چالشی، فرصت رشد است\nبه دنبال آن باش",
-    "زندگی، ساده‌تر از آن است که فکر می‌کنی\nساده بگیر",
-    "با شجاعت قدم بردار\nشجاعت، در انتخاب است",
-    "از خودت مراقبت کن\nتو مهم‌ترین شخص زندگی خودت هستی",
-    "با امید زندگی کن\nامید، راه را روشن می‌کند",
-    "خودت را محدود نکن\nتو بی‌نهایت توانمندی",
-    "به آینه نگاه کن و بگو\nمن می‌توانم",
-    "در سخت‌ترین لحظات، قوی‌ترین خودت باش\nاین هنر است",
-    "با لبخند، جهان را زیباتر کن\nلبخند مسری است",
-    "برای رویاهایت بجنگ\nچون ارزشش را دارند",
-    "در هر روز، یه معجزه است\nآن را ببین",
-    "با انگیزه بیدار شو\nروزت را زیبا کن",
-    "از دیروز بهتر باش\nاین معنای پیشرفت است",
-    "خودت را وقف چیزی کن\nزندگی هدفمند، زیباست",
-    "به مسیری که می‌روی ایمان داشته باش\nادامه بده",
-    "در دنیای پرهیاهو، آرام بمان\nآرامش، گنج است",
-    "با عشق به خودت، شروع کن\nعشق به خود، پایه‌ی همه چیز است",
-    "درون خودت را کشف کن\nگنجینه‌ای در تو نهفته",
-    "هر روز، یک فرصت طلایی است\nآن را غنیمت بشمار",
-    "با توکل و تلاش، به هدف برس\nترکیب برنده همین است",
-    "در هر لحظه، انتخابی داری\nانتخاب‌هایت را آگاهانه بگیر",
-    "خودت را بالا ببر\nپرواز کن",
-    "با آرامش، مشکلات حل می‌شوند\nآرام باش",
-    "از خودت بپرس: بهترین نسخه‌ی من کیست؟\nو آن شو",
-    "با لبخند، زندگی را رنگین کن\nرنگین‌کمانی در توست",
-    "در تاریکی، نور خودت باش\nبدرخش",
-    "به خودت اعتماد کن\nتو قوی‌تر از آنی که فکر می‌کنی",
-    "برای خودت وقت بگذار\nارزشمندترین سرمایه‌گذاری",
-    "با امید، زندگی را ادامه بده\nامید، سوخت زندگی است",
-    "هر روز، یک هدیه است\nشکرگزار باش",
-    "از تجربه‌هایت استفاده کن\nآن‌ها گنج هستند",
-    "با قلب، تصمیم بگیر\nقلب دروغ نمی‌گوید",
-    "به خودت عشق بورز\nعشق به خود، اولین قدم است",
-    "با اهداف روشن پیش برو\nهدف، ستاره‌ی راه است",
-    "در هر قدم، شکرگزار باش\nشکرگزاری، زندگی را زیبا می‌کند",
-    "از زندگیت لذت ببر\nاین لحظه، تنها لحظه‌ای است که داری",
-    "با اعتماد، به خودت ایمان داشته باش\nایمان، قدرتمندترین نیروست",
-    "هر چالشی، یک فرصت است\nفقط باور کن",
-    "با آرامش، به پیش برو\nآرامش، اوج قدرت است",
-    "خودت را از هیچ‌کس کمتر ندان\nهمه برابرند",
-    "با امید، به فردا لبخند بزن\nفردا، امروزِ دیروز است",
-    "از شکست‌هایت، پله بساز\nبه سوی موفقیت",
-    "در هر لحظه، بهترین خودت باش\nچون این زندگی توست",
-    "با عشق به دیگران، به خودت عشق بورز\nعشق، چرخه‌ای است",
-    "از نعمت‌های زندگیت شکرگزار باش\nشکرگزاری، آرامش می‌آورد",
-    "با توکل به خدا، آرام باش\nآرامش، بزرگ‌ترین ثروت است",
-    "در هر سختی، فرجی هست\nاین وعده‌ی الهی است",
-    "خودت را از قفس ذهن آزاد کن\nآزادی، در ذهن است",
-    "با شکرگزاری، روزت را آغاز کن\nشکر، درهای خوبی را باز می‌کند",
-    "هر روز یک شروع جدید است\nاز امروز بهترین خودت باش",
-]
-
 _cache = {}
 CACHE_TTL = 1800
+_cache_last_cleanup = [0]
 
 scheduler = None
 channel_jobs = {}
@@ -254,59 +101,67 @@ def _cache_set(key, value):
     _cache[key] = (value, time.time())
 
 
+def _cache_cleanup():
+    """پاک‌سازی دوره‌ای کش"""
+    now = time.time()
+    if now - _cache_last_cleanup[0] < 600:
+        return
+    _cache_last_cleanup[0] = now
+    expired = [k for k, (_, ts) in _cache.items() if now - ts > CACHE_TTL]
+    for k in expired:
+        _cache.pop(k, None)
+
+
+# ==================== دیتابیس ====================
+
 def init_db():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("""
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY,
-            value TEXT
-        )
-    """)
+
     c.execute("""
         CREATE TABLE IF NOT EXISTS channels (
             chat_id TEXT PRIMARY KEY,
             title TEXT,
-            send_hour INTEGER DEFAULT 0,
-            send_minute INTEGER DEFAULT 1,
             added_at TEXT
         )
     """)
-    c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('default_hour', '0')")
-    c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('default_minute', '1')")
-    conn.commit()
-    conn.close()
 
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS channel_times (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            chat_id TEXT,
+            send_hour INTEGER,
+            send_minute INTEGER,
+            UNIQUE(chat_id, send_hour, send_minute)
+        )
+    """)
 
-def get_setting(key, default=None):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("SELECT value FROM settings WHERE key = ?", (key,))
-    row = c.fetchone()
-    conn.close()
-    return row[0] if row else default
+    # مهاجرت از ساختار قدیمی
+    try:
+        c.execute("PRAGMA table_info(channels)")
+        cols = [col[1] for col in c.fetchall()]
+        if "send_hour" in cols and "send_minute" in cols:
+            c.execute("""
+                INSERT OR IGNORE INTO channel_times (chat_id, send_hour, send_minute)
+                SELECT chat_id, send_hour, send_minute FROM channels
+                WHERE send_hour IS NOT NULL AND send_minute IS NOT NULL
+            """)
+    except Exception as e:
+        print(f"Migration check: {e}")
 
+    c.execute("CREATE INDEX IF NOT EXISTS idx_channel_times_chat ON channel_times(chat_id)")
 
-def set_setting(key, value):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
-              (key, str(value)))
     conn.commit()
     conn.close()
 
 
 def add_channel(chat_id, title=""):
-    default_hour = int(get_setting("default_hour", "0"))
-    default_minute = int(get_setting("default_minute", "1"))
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("""
-        INSERT OR REPLACE INTO channels
-        (chat_id, title, send_hour, send_minute, added_at)
-        VALUES (?, ?, ?, ?, ?)
-    """, (str(chat_id), title, default_hour, default_minute,
-          datetime.now().isoformat()))
+        INSERT OR REPLACE INTO channels (chat_id, title, added_at)
+        VALUES (?, ?, ?)
+    """, (str(chat_id), title, datetime.now().isoformat()))
     conn.commit()
     conn.close()
 
@@ -314,7 +169,7 @@ def add_channel(chat_id, title=""):
 def get_channels():
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("SELECT chat_id, title, send_hour, send_minute FROM channels")
+    c.execute("SELECT chat_id, title FROM channels")
     rows = c.fetchall()
     conn.close()
     return rows
@@ -329,36 +184,64 @@ def get_channel_title(chat_id):
     return row[0] if row else ""
 
 
-def get_channel_time(chat_id):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("SELECT send_hour, send_minute FROM channels WHERE chat_id = ?",
-              (str(chat_id),))
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return row[0], row[1]
-    return 0, 1
-
-
-def set_channel_time(chat_id, hour, minute):
-    conn = sqlite3.connect(DB_NAME)
-    c = conn.cursor()
-    c.execute("""
-        UPDATE channels SET send_hour = ?, send_minute = ?
-        WHERE chat_id = ?
-    """, (int(hour), int(minute), str(chat_id)))
-    conn.commit()
-    conn.close()
-
-
 def delete_channel(chat_id):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
     c.execute("DELETE FROM channels WHERE chat_id = ?", (str(chat_id),))
+    c.execute("DELETE FROM channel_times WHERE chat_id = ?", (str(chat_id),))
     conn.commit()
     conn.close()
 
+
+def get_channel_times(chat_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        SELECT id, send_hour, send_minute FROM channel_times
+        WHERE chat_id = ?
+        ORDER BY send_hour, send_minute
+    """, (str(chat_id),))
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+
+def add_channel_time(chat_id, hour, minute):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    try:
+        c.execute("""
+            INSERT INTO channel_times (chat_id, send_hour, send_minute)
+            VALUES (?, ?, ?)
+        """, (str(chat_id), int(hour), int(minute)))
+        conn.commit()
+        time_id = c.lastrowid
+        conn.close()
+        return time_id
+    except sqlite3.IntegrityError:
+        conn.close()
+        return None
+
+
+def delete_channel_time(time_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("DELETE FROM channel_times WHERE id = ?", (int(time_id),))
+    conn.commit()
+    conn.close()
+
+
+def get_time_by_id(time_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT chat_id, send_hour, send_minute FROM channel_times WHERE id = ?",
+              (int(time_id),))
+    row = c.fetchone()
+    conn.close()
+    return row
+
+
+# ==================== بررسی کانال ====================
 
 async def check_channel_status(bot, chat_id):
     try:
@@ -374,10 +257,7 @@ async def check_channel_status(bot, chat_id):
                 "• ربات عضو این مقصد نیست\n"
                 "• مقصد خصوصی است و ربات به آن دسترسی ندارد"
             )
-        return "error", (
-            f"وضعیت: خطای غیرمنتظره\n\n"
-            f"جزئیات: {str(e)[:200]}"
-        )
+        return "error", f"وضعیت: خطای غیرمنتظره\n\nجزئیات: {str(e)[:200]}"
 
     chat_type = chat.type
     chat_title = chat.title or str(chat_id)
@@ -406,7 +286,6 @@ async def check_channel_status(bot, chat_id):
     try:
         member = await bot.get_chat_member(chat_id, bot_id)
         status = member.status
-
         is_admin = status in ("administrator", "creator")
 
         if not is_admin:
@@ -414,15 +293,14 @@ async def check_channel_status(bot, chat_id):
                 f"وضعیت: عدم دسترسی مدیریتی\n\n"
                 f"کانال: «{chat_title}»\n\n"
                 f"ربات در این کانال دارای دسترسی مدیریتی نیست.\n"
-                f"لطفاً جهت فعال‌سازی، مراحل زیر را انجام دهید:\n\n"
-                f"۱. ورود به تنظیمات کانال\n"
+                f"لطفاً جهت فعال‌سازی:\n\n"
+                f"۱. تنظیمات کانال\n"
                 f"۲. بخش مدیریت (Administrators)\n"
                 f"۳. افزودن ربات به عنوان مدیر\n"
                 f"۴. فعال‌سازی دسترسی «ارسال پیام»"
             )
 
         can_post = getattr(member, "can_post_messages", False)
-
         if status == "creator":
             can_post = True
 
@@ -443,24 +321,21 @@ async def check_channel_status(bot, chat_id):
 
     except Exception as e:
         error_str = str(e).lower()
-
         if "member list is inaccessible" in error_str or "chat admin" in error_str:
             return "not_admin", (
                 f"وضعیت: عدم دسترسی مدیریتی\n\n"
                 f"کانال: «{chat_title}»\n\n"
                 f"ربات در این کانال دارای دسترسی مدیریتی نیست.\n"
-                f"لطفاً جهت فعال‌سازی، مراحل زیر را انجام دهید:\n\n"
-                f"۱. ورود به تنظیمات کانال\n"
+                f"لطفاً جهت فعال‌سازی:\n\n"
+                f"۱. تنظیمات کانال\n"
                 f"۲. بخش مدیریت (Administrators)\n"
                 f"۳. افزودن ربات به عنوان مدیر\n"
                 f"۴. فعال‌سازی دسترسی «ارسال پیام»"
             )
+        return "error", f"وضعیت: خطای غیرمنتظره\n\nجزئیات: {str(e)[:200]}"
 
-        return "error", (
-            f"وضعیت: خطای غیرمنتظره\n\n"
-            f"جزئیات: {str(e)[:200]}"
-        )
 
+# ==================== تاریخ و آب‌وهوا ====================
 
 def to_persian_date(dt):
     try:
@@ -474,7 +349,6 @@ def get_date_info():
     now = datetime.now(tz)
 
     weekday_fa = WEEKDAYS_FA[now.weekday()]
-
     j_date = to_persian_date(now.date())
 
     if j_date:
@@ -499,66 +373,40 @@ def get_date_info():
     }
 
 
-def get_todays_motivation():
-    tz = ZoneInfo(TIMEZONE)
-    now = datetime.now(tz)
-    day_of_year = now.timetuple().tm_yday
-    index = (day_of_year - 1) % len(MOTIVATIONAL_MESSAGES)
-    return MOTIVATIONAL_MESSAGES[index]
-
-
 def get_weather():
     results = []
-
     desc_map = {
-        "Sunny": "آفتابی ☀️",
-        "Clear": "صاف ☀️",
-        "Partly cloudy": "نیمه‌ابری 🌤️",
-        "Cloudy": "ابری ☁️",
-        "Overcast": "ابری ☁️",
-        "Mist": "مه 🌫️",
-        "Fog": "مه 🌫️",
-        "Freezing fog": "مه یخ‌زده 🌫️",
-        "Haze": "مه‌آلود 🌫️",
+        "Sunny": "آفتابی ☀️", "Clear": "صاف ☀️",
+        "Partly cloudy": "نیمه‌ابری 🌤️", "Cloudy": "ابری ☁️",
+        "Overcast": "ابری ☁️", "Mist": "مه 🌫️", "Fog": "مه 🌫️",
+        "Freezing fog": "مه یخ‌زده 🌫️", "Haze": "مه‌آلود 🌫️",
         "Smoky haze": "دودآلود 🌫️",
-        "Light rain": "باران سبک 🌦️",
-        "Light drizzle": "نم‌نم 🌦️",
+        "Light rain": "باران سبک 🌦️", "Light drizzle": "نم‌نم 🌦️",
         "Light rain shower": "باران سبک 🌦️",
         "Patchy rain nearby": "باران پراکنده 🌦️",
         "Patchy rain possible": "احتمال باران 🌦️",
         "Patchy light rain": "باران سبک پراکنده 🌦️",
-        "Rain": "باران 🌧️",
-        "Moderate rain": "باران 🌧️",
+        "Rain": "باران 🌧️", "Moderate rain": "باران 🌧️",
         "Heavy rain": "باران شدید 🌧️",
         "Moderate or heavy rain shower": "باران شدید 🌧️",
-        "Snow": "برف 🌨️",
-        "Light snow": "برف سبک 🌨️",
+        "Snow": "برف 🌨️", "Light snow": "برف سبک 🌨️",
         "Blowing snow": "برف همراه با باد 🌨️",
-        "Blizzard": "کولاک ❄️",
-        "Thunderstorm": "رعد و برق ⛈️",
+        "Blizzard": "کولاک ❄️", "Thunderstorm": "رعد و برق ⛈️",
     }
 
     for city_fa, city_en in CITIES.items():
         try:
             url = f"https://wttr.in/{city_en}?format=j1"
-            resp = requests.get(
-                url,
-                timeout=10,
-                headers={"User-Agent": "curl/7.68.0"}
-            )
+            resp = requests.get(url, timeout=10, headers={"User-Agent": "curl/7.68.0"})
             data = resp.json()
-
             current = data.get("current_condition", [{}])[0]
             temp = current.get("temp_C", "—")
             desc_en = current.get("weatherDesc", [{}])[0].get("value", "").strip()
-
             desc = desc_map.get(desc_en, "نامشخص")
-
             results.append(f"🌡️ {city_fa}: {temp}°C | {desc}")
         except Exception as e:
             print(f"Weather {city_fa}: {e}")
             results.append(f"🌡️ {city_fa}: —")
-
     return results
 
 
@@ -568,27 +416,24 @@ def get_prayer_times():
         url = (
             f"https://api.aladhan.com/v1/timings"
             f"?latitude={lat}&longitude={lon}"
-            f"&method=7"
-            f"&timezone=Asia/Tehran"
+            f"&method=7&timezone=Asia/Tehran"
         )
         resp = requests.get(url, timeout=8)
         data = resp.json()
-
         if data.get("code") != 200:
             return None
-
-        timings = data["data"]["timings"]
+        t = data["data"]["timings"]
         return {
-            "fajr": timings.get("Fajr", "—"),
-            "sunrise": timings.get("Sunrise", "—"),
-            "dhuhr": timings.get("Dhuhr", "—"),
-            "maghrib": timings.get("Maghrib", "—"),
-            "isha": timings.get("Isha", "—"),
+            "fajr": t.get("Fajr", "—"), "sunrise": t.get("Sunrise", "—"),
+            "dhuhr": t.get("Dhuhr", "—"), "maghrib": t.get("Maghrib", "—"),
+            "isha": t.get("Isha", "—"),
         }
     except Exception as e:
         print(f"Prayer: {e}")
         return None
 
+
+# ==================== قیمت‌ها ====================
 
 def get_crypto_prices_usd_batch():
     cache_key = "usd_batch"
@@ -614,20 +459,18 @@ def get_crypto_prices_usd_batch():
                 try:
                     url = f"https://api.binance.com/api/v3/ticker/price?symbol={binance_sym}"
                     resp = requests.get(url, timeout=8)
-                    data = resp.json()
-                    p = float(data.get("price", 0))
+                    p = float(resp.json().get("price", 0))
                     if p > 0:
                         price = p
                         break
                 except Exception as e:
-                    print(f"Binance {symbol} attempt {attempt + 1}: {e}")
+                    print(f"Binance {symbol} try{attempt + 1}: {e}")
 
         if price is None:
             try:
                 url = f"https://api.coinpaprika.com/v1/tickers/{crypto['coinpaprika_id']}"
                 resp = requests.get(url, timeout=6)
-                data = resp.json()
-                price = data.get("quotes", {}).get("USD", {}).get("price")
+                price = resp.json().get("quotes", {}).get("USD", {}).get("price")
             except Exception as e:
                 print(f"CoinPaprika {symbol}: {e}")
 
@@ -648,24 +491,20 @@ def _get_usdt_toman():
         params = {"srcCurrency": "usdt", "dstCurrency": "rls"}
         resp = requests.get(url, params=params, timeout=8)
         data = resp.json()
-
         if data.get("status") == "ok":
             stats = data.get("stats", {})
-            key = "usdt-rls"
-            if key in stats:
-                price_rls = stats[key].get("latest")
+            if "usdt-rls" in stats:
+                price_rls = stats["usdt-rls"].get("latest")
                 if price_rls:
                     price_toman = int(float(price_rls)) // 10
                     _cache_set(cache_key, price_toman)
                     return price_toman
     except Exception as e:
         print(f"USDT Nobitex: {e}")
-
     return None
 
 
 def _get_usd_to_toman():
-    """نرخ دقیق دلار به تومان: usdt_toman / usdt_usd"""
     cache_key = "usd_to_toman"
     cached = _cache_get(cache_key)
     if cached:
@@ -677,7 +516,6 @@ def _get_usd_to_toman():
 
     usd_prices = get_crypto_prices_usd_batch()
     usdt_usd = usd_prices.get("tether", 1.0) or 1.0
-
     if usdt_usd <= 0:
         return None
 
@@ -698,7 +536,6 @@ def get_gold_price_18k():
         url = "https://api.goldprice.dev/v1/carat?currency=USD"
         resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
         data = resp.json()
-
         if "price_gram_18k" in data:
             gold_usd_per_gram = float(data["price_gram_18k"])
     except Exception as e:
@@ -709,7 +546,6 @@ def get_gold_price_18k():
             url = "https://api.metals.live/v1/spot/gold"
             resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
             data = resp.json()
-
             if "price" in data:
                 gold_usd_per_ounce = float(data["price"])
                 gold_usd_per_gram = (gold_usd_per_ounce / 31.1035) * (18 / 24)
@@ -723,10 +559,9 @@ def get_gold_price_18k():
     if not usd_to_toman:
         return None
 
-    gold_toman = int(gold_usd_per_gram * usd_to_toman)
     result = {
         "price_usd": gold_usd_per_gram,
-        "price_toman": gold_toman,
+        "price_toman": int(gold_usd_per_gram * usd_to_toman),
     }
     _cache_set(cache_key, result)
     return result
@@ -738,43 +573,42 @@ def get_silver_price():
     if cached:
         return cached
 
-    silver_usd_per_gram = None
+    silver_usd_per_ounce = None
 
     try:
-        url = "https://api.metals.live/v1/spot/silver"
+        url = "https://query1.finance.yahoo.com/v8/finance/chart/SI=F"
         resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
         data = resp.json()
-
-        if "price" in data:
-            silver_usd_per_ounce = float(data["price"])
-            silver_usd_per_gram = silver_usd_per_ounce / 31.1035
+        result = data.get("chart", {}).get("result", [])
+        if result:
+            price = result[0].get("meta", {}).get("regularMarketPrice")
+            if price and float(price) > 0:
+                silver_usd_per_ounce = float(price)
     except Exception as e:
-        print(f"Metals.live silver: {e}")
+        print(f"Yahoo Silver: {e}")
 
-    if silver_usd_per_gram is None:
+    if silver_usd_per_ounce is None:
         try:
-            url = "https://api.goldprice.dev/v1/spot/silver?currency=USD"
+            url = "https://api.metals.live/v1/spot/silver"
             resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
             data = resp.json()
-
-            if "price_gram_24k" in data:
-                silver_usd_per_gram = float(data["price_gram_24k"])
-            elif "price" in data:
-                silver_usd_per_gram = float(data["price"]) / 31.1035
+            if "price" in data:
+                silver_usd_per_ounce = float(data["price"])
         except Exception as e:
-            print(f"GoldPrice.dev silver: {e}")
+            print(f"Metals.live silver: {e}")
 
-    if silver_usd_per_gram is None:
+    if silver_usd_per_ounce is None:
         return None
+
+    silver_usd_per_gram = silver_usd_per_ounce / 31.1035
 
     usd_to_toman = _get_usd_to_toman()
     if not usd_to_toman:
         return None
 
-    silver_toman = int(silver_usd_per_gram * usd_to_toman)
     result = {
         "price_usd": silver_usd_per_gram,
-        "price_toman": silver_toman,
+        "price_toman": int(silver_usd_per_gram * usd_to_toman),
     }
     _cache_set(cache_key, result)
     return result
@@ -790,16 +624,12 @@ def get_oil_price_brent():
         url = "https://query1.finance.yahoo.com/v8/finance/chart/BZ=F"
         resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
         data = resp.json()
-
         result = data.get("chart", {}).get("result", [])
         if result:
-            meta = result[0].get("meta", {})
-            price = meta.get("regularMarketPrice")
-            if price:
-                price = float(price)
-                if price > 0:
-                    _cache_set(cache_key, price)
-                    return price
+            price = result[0].get("meta", {}).get("regularMarketPrice")
+            if price and float(price) > 0:
+                _cache_set(cache_key, float(price))
+                return float(price)
     except Exception as e:
         print(f"Yahoo Brent: {e}")
 
@@ -807,7 +637,6 @@ def get_oil_price_brent():
         url = "https://api.oilpriceapi.com/v1/demo/prices/BRENT_CRUDE_USD"
         resp = requests.get(url, headers=HTTP_HEADERS, timeout=10)
         data = resp.json()
-
         if data.get("status") == "success":
             prices = data.get("data", {}).get("prices", [])
             if prices:
@@ -833,20 +662,15 @@ def format_price(value):
 
 def build_crypto_section():
     lines = []
-
     usd_prices = get_crypto_prices_usd_batch()
     usd_to_toman = _get_usd_to_toman()
 
     for crypto in CRYPTOS:
         symbol = crypto["symbol"]
         gid = crypto["coingecko_id"]
-
         usd = usd_prices.get(gid)
 
-        if usd and usd_to_toman:
-            toman = int(usd * usd_to_toman)
-        else:
-            toman = None
+        toman = int(usd * usd_to_toman) if (usd and usd_to_toman) else None
 
         usd_str = f"${format_price(usd)}" if usd else "—"
         toman_str = f"{toman:,} تومان" if toman else "—"
@@ -855,19 +679,13 @@ def build_crypto_section():
 
     silver = get_silver_price()
     if silver:
-        lines.append(
-            f"SILVER: ${format_price(silver['price_usd'])} / "
-            f"{silver['price_toman']:,} تومان"
-        )
+        lines.append(f"SILVER: ${format_price(silver['price_usd'])} / {silver['price_toman']:,} تومان")
     else:
         lines.append("SILVER: —")
 
     gold = get_gold_price_18k()
     if gold:
-        lines.append(
-            f"GOLD (18): ${format_price(gold['price_usd'])} / "
-            f"{gold['price_toman']:,} تومان"
-        )
+        lines.append(f"GOLD (18): ${format_price(gold['price_usd'])} / {gold['price_toman']:,} تومان")
     else:
         lines.append("GOLD (18): —")
 
@@ -885,7 +703,6 @@ def build_daily_message():
     weather = get_weather()
     prayers = get_prayer_times()
     crypto = build_crypto_section()
-    motivation = get_todays_motivation()
 
     text = ""
     text += f"📅 {date_info['weekday']} {date_info['jalali']}\n"
@@ -911,19 +728,18 @@ def build_daily_message():
     for c in crypto:
         text += f"{c}\n"
 
-    text += "\n━━━━━━━━━━━━━━\n\n"
-    text += f"💫 {motivation}"
-
     return text
 
 
-def schedule_channel(chat_id, hour, minute):
+# ==================== Scheduler ====================
+
+def schedule_channel_time(chat_id, time_id, hour, minute):
     global scheduler
 
     if scheduler is None:
         return
 
-    job_id = f"channel_{chat_id}"
+    job_id = f"channel_{chat_id}_time_{time_id}"
 
     if job_id in channel_jobs:
         try:
@@ -941,9 +757,9 @@ def schedule_channel(chat_id, hour, minute):
             replace_existing=True
         )
         channel_jobs[job_id] = job
-        print(f"زمان‌بندی {chat_id} - {hour:02d}:{minute:02d}")
+        print(f"زمان‌بندی {chat_id} #{time_id} - {hour:02d}:{minute:02d}")
     except Exception as e:
-        print(f"خطا در زمان‌بندی {chat_id}: {e}")
+        print(f"خطا در زمان‌بندی {chat_id} #{time_id}: {e}")
 
 
 async def send_to_channel(chat_id):
@@ -951,6 +767,7 @@ async def send_to_channel(chat_id):
     if not app_telegram:
         return
     try:
+        _cache_cleanup()
         message = await asyncio.to_thread(build_daily_message)
         await app_telegram.bot.send_message(
             chat_id=chat_id,
@@ -981,32 +798,22 @@ def start_scheduler():
     scheduler.start()
 
     channels = get_channels()
-    for chat_id, title, hour, minute in channels:
-        schedule_channel(chat_id, hour, minute)
+    total_times = 0
+    for chat_id, title in channels:
+        times = get_channel_times(chat_id)
+        for time_id, hour, minute in times:
+            schedule_channel_time(chat_id, time_id, hour, minute)
+            total_times += 1
 
-    print(f"Scheduler started - {len(channels)} channels")
+    print(f"Scheduler started - {len(channels)} channels, {total_times} times")
 
 
-def restart_channel_job(chat_id):
-    hour, minute = get_channel_time(chat_id)
-    schedule_channel(chat_id, hour, minute)
-
+# ==================== UI ====================
 
 def back_button(target="menu_back"):
     return InlineKeyboardMarkup([
         [InlineKeyboardButton("🔙 بازگشت به منوی قبل", callback_data=target)]
     ])
-
-
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if update.effective_user.id != ADMIN_ID:
-        await update.message.reply_text(
-            "این ربات تنها برای مدیر سامانه قابل استفاده است."
-        )
-        return
-    await update.message.reply_text(
-        "برای دسترسی به پنل مدیریت، از دستور /admin استفاده نمایید."
-    )
 
 
 def main_menu_keyboard():
@@ -1017,13 +824,20 @@ def main_menu_keyboard():
     ])
 
 
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text("این ربات تنها برای مدیر سامانه قابل استفاده است.")
+        return
+    await update.message.reply_text(
+        "برای دسترسی به پنل مدیریت، از دستور /admin استفاده نمایید."
+    )
+
+
 async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.effective_user.id != ADMIN_ID:
         return
-
     await update.message.reply_text(
-        "مدیریت ربات\n\n"
-        "لطفاً یکی از گزینه‌های زیر را انتخاب نمایید:",
+        "مدیریت ربات\n\nلطفاً یکی از گزینه‌های زیر را انتخاب نمایید:",
         reply_markup=main_menu_keyboard()
     )
 
@@ -1037,7 +851,13 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     data = query.data
 
-    if data == "menu_add":
+    if data == "menu_back":
+        await query.edit_message_text(
+            "مدیریت ربات\n\nلطفاً یکی از گزینه‌های زیر را انتخاب نمایید:",
+            reply_markup=main_menu_keyboard()
+        )
+
+    elif data == "menu_add":
         context.user_data["awaiting"] = "channel_id"
         await query.edit_message_text(
             "افزودن کانال\n\n"
@@ -1054,26 +874,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         channels = get_channels()
         if not channels:
             await query.edit_message_text(
-                "مدیریت کانال‌ها\n\n"
-                "در حال حاضر هیچ کانالی ثبت نشده است.",
+                "مدیریت کانال‌ها\n\nدر حال حاضر هیچ کانالی ثبت نشده است.",
                 reply_markup=back_button("menu_back")
             )
             return
 
         keyboard = []
-        for cid, title, hour, minute in channels:
+        for cid, title in channels:
             display = title if title else cid
-            keyboard.append([
-                InlineKeyboardButton(
-                    f"📢 {display} ({hour:02d}:{minute:02d})",
-                    callback_data=f"ch_{cid}"
-                )
-            ])
+            keyboard.append([InlineKeyboardButton(f"📢 {display}", callback_data=f"ch_{cid}")])
         keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data="menu_back")])
 
         await query.edit_message_text(
-            "مدیریت کانال‌ها\n\n"
-            "لطفاً کانال مورد نظر را انتخاب نمایید:",
+            "مدیریت کانال‌ها\n\nلطفاً کانال مورد نظر را انتخاب نمایید:",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
@@ -1081,23 +894,19 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         channels = get_channels()
         if not channels:
             await query.edit_message_text(
-                "ارسال فوری\n\n"
-                "در حال حاضر هیچ کانالی ثبت نشده است.",
+                "ارسال فوری\n\nدر حال حاضر هیچ کانالی ثبت نشده است.",
                 reply_markup=back_button("menu_back")
             )
             return
 
         keyboard = []
-        for cid, title, hour, minute in channels:
+        for cid, title in channels:
             display = title if title else cid
-            keyboard.append([
-                InlineKeyboardButton(f"📢 {display}", callback_data=f"sendnow_{cid}")
-            ])
+            keyboard.append([InlineKeyboardButton(f"📢 {display}", callback_data=f"sendnow_{cid}")])
         keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data="menu_back")])
 
         await query.edit_message_text(
-            "ارسال فوری\n\n"
-            "لطفاً کانال مورد نظر را انتخاب نمایید:",
+            "ارسال فوری\n\nلطفاً کانال مورد نظر را انتخاب نمایید:",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
@@ -1105,50 +914,68 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id = data.replace("ch_", "")
         title = get_channel_title(chat_id)
         display = title if title else chat_id
-        hour, minute = get_channel_time(chat_id)
-        current_time = f"{hour:02d}:{minute:02d}"
+        count = len(get_channel_times(chat_id))
 
         keyboard = [
             [InlineKeyboardButton("📤 ارسال فوری", callback_data=f"sendnow_{chat_id}")],
-            [InlineKeyboardButton(
-                f"⏰ تنظیم زمان (فعلی: {current_time})",
-                callback_data=f"settime_{chat_id}"
-            )],
+            [InlineKeyboardButton(f"⏰ مدیریت زمان‌ها ({count} زمان)", callback_data=f"times_{chat_id}")],
             [InlineKeyboardButton("🗑️ حذف کانال", callback_data=f"del_{chat_id}")],
             [InlineKeyboardButton("🔙 بازگشت", callback_data="menu_list")],
         ]
 
         await query.edit_message_text(
-            f"کانال: «{display}»\n\n"
-            f"زمان ارسال: {current_time}\n\n"
+            f"کانال: «{display}»\n\nتعداد زمان‌های ارسال: {count}\n\n"
             f"لطفاً عملیات مورد نظر را انتخاب نمایید:",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
-    elif data.startswith("settime_"):
-        chat_id = data.replace("settime_", "")
+    elif data.startswith("times_"):
+        chat_id = data.replace("times_", "")
         title = get_channel_title(chat_id)
         display = title if title else chat_id
-        hour, minute = get_channel_time(chat_id)
-        current_time = f"{hour:02d}:{minute:02d}"
+        times = get_channel_times(chat_id)
 
-        context.user_data["awaiting"] = "channel_time"
+        keyboard = []
+        for time_id, hour, minute in times:
+            keyboard.append([InlineKeyboardButton(
+                f"🗑️ حذف {hour:02d}:{minute:02d}",
+                callback_data=f"deltime_{time_id}"
+            )])
+
+        keyboard.append([InlineKeyboardButton("➕ افزودن زمان جدید", callback_data=f"addtime_{chat_id}")])
+        keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data=f"ch_{chat_id}")])
+
+        if times:
+            time_list = "\n".join([f"• {h:02d}:{m:02d}" for _, h, m in times])
+            msg_text = f"مدیریت زمان‌های ارسال\n\nکانال: «{display}»\n\nزمان‌های فعلی:\n{time_list}\n\nبرای حذف، روی دکمه‌ی مربوطه بزنید."
+        else:
+            msg_text = f"مدیریت زمان‌های ارسال\n\nکانال: «{display}»\n\nدر حال حاضر هیچ زمانی ثبت نشده است.\nبرای افزودن، دکمه‌ی زیر را بزنید."
+
+        await query.edit_message_text(msg_text, reply_markup=InlineKeyboardMarkup(keyboard))
+
+    elif data.startswith("addtime_"):
+        chat_id = data.replace("addtime_", "")
+        context.user_data["awaiting"] = "new_channel_time"
         context.user_data["channel_id"] = chat_id
+        title = get_channel_title(chat_id)
+        display = title if title else chat_id
 
         await query.edit_message_text(
-            f"تنظیم زمان ارسال\n\n"
-            f"کانال: «{display}»\n"
-            f"زمان فعلی: {current_time}\n\n"
+            f"افزودن زمان جدید\n\nکانال: «{display}»\n\n"
             f"لطفاً زمان جدید را به قالب HH:MM ارسال نمایید.\n"
-            f"نمونه: 08:00",
-            reply_markup=back_button(f"ch_{chat_id}")
+            f"نمونه: 08:30 یا 00:01",
+            reply_markup=back_button(f"times_{chat_id}")
         )
 
-    elif data.startswith("del_"):
-        chat_id = data.replace("del_", "")
-        delete_channel(chat_id)
+    elif data.startswith("deltime_"):
+        time_id = int(data.replace("deltime_", ""))
+        time_info = get_time_by_id(time_id)
+        if not time_info:
+            return
+        chat_id, hour, minute = time_info
+        delete_channel_time(time_id)
 
-        job_id = f"channel_{chat_id}"
+        job_id = f"channel_{chat_id}_time_{time_id}"
         if job_id in channel_jobs:
             try:
                 channel_jobs[job_id].remove()
@@ -1156,38 +983,54 @@ async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             except Exception:
                 pass
 
-        await query.edit_message_text(
-            "وضعیت: انجام شد\n\n"
-            "کانال مورد نظر از فهرست حذف گردید.",
-            reply_markup=back_button("menu_list")
-        )
+        title = get_channel_title(chat_id)
+        display = title if title else chat_id
+        times = get_channel_times(chat_id)
+
+        keyboard = []
+        for tid, h, m in times:
+            keyboard.append([InlineKeyboardButton(f"🗑️ حذف {h:02d}:{m:02d}", callback_data=f"deltime_{tid}")])
+        keyboard.append([InlineKeyboardButton("➕ افزودن زمان جدید", callback_data=f"addtime_{chat_id}")])
+        keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data=f"ch_{chat_id}")])
+
+        if times:
+            time_list = "\n".join([f"• {h:02d}:{m:02d}" for _, h, m in times])
+            msg_text = f"مدیریت زمان‌های ارسال\n\nکانال: «{display}»\n\nزمان‌های فعلی:\n{time_list}\n\nبرای حذف، روی دکمه‌ی مربوطه بزنید."
+        else:
+            msg_text = f"مدیریت زمان‌های ارسال\n\nکانال: «{display}»\n\nدر حال حاضر هیچ زمانی ثبت نشده است.\nبرای افزودن، دکمه‌ی زیر را بزنید."
+
+        await query.edit_message_text(msg_text, reply_markup=InlineKeyboardMarkup(keyboard))
 
     elif data.startswith("sendnow_"):
         chat_id = data.replace("sendnow_", "")
         try:
             message = await asyncio.to_thread(build_daily_message)
-            await context.bot.send_message(
-                chat_id=chat_id,
-                text=message,
-                parse_mode="Markdown"
-            )
+            await context.bot.send_message(chat_id=chat_id, text=message, parse_mode="Markdown")
             await query.edit_message_text(
-                "وضعیت: انجام شد\n\n"
-                "پیام مورد نظر با موفقیت ارسال گردید.",
+                "وضعیت: انجام شد\n\nپیام مورد نظر با موفقیت ارسال گردید.",
                 reply_markup=back_button("menu_sendnow")
             )
         except Exception as e:
             await query.edit_message_text(
-                f"وضعیت: خطا در ارسال\n\n"
-                f"جزئیات: {str(e)[:200]}",
+                f"وضعیت: خطا در ارسال\n\nجزئیات: {str(e)[:200]}",
                 reply_markup=back_button("menu_sendnow")
             )
 
-    elif data == "menu_back":
+    elif data.startswith("del_"):
+        chat_id = data.replace("del_", "")
+        delete_channel(chat_id)
+
+        for job_id in list(channel_jobs.keys()):
+            if job_id.startswith(f"channel_{chat_id}_time_"):
+                try:
+                    channel_jobs[job_id].remove()
+                except Exception:
+                    pass
+                del channel_jobs[job_id]
+
         await query.edit_message_text(
-            "مدیریت ربات\n\n"
-            "لطفاً یکی از گزینه‌های زیر را انتخاب نمایید:",
-            reply_markup=main_menu_keyboard()
+            "وضعیت: انجام شد\n\nکانال مورد نظر از فهرست حذف گردید.",
+            reply_markup=back_button("menu_list")
         )
 
 
@@ -1201,14 +1044,12 @@ async def process_channel_id(update, context, channel_input):
                 channel_input = "@" + channel_input
         except Exception:
             await update.message.reply_text(
-                "وضعیت: خطا در پردازش\n\n"
-                "لینک وارد شده نامعتبر است.",
+                "وضعیت: خطا در پردازش\n\nلینک وارد شده نامعتبر است.",
                 reply_markup=back_button("menu_add")
             )
             return
 
     chat_id = channel_input
-
     await update.message.reply_text("در حال بررسی کانال...")
 
     status, message = await check_channel_status(context.bot, chat_id)
@@ -1216,34 +1057,23 @@ async def process_channel_id(update, context, channel_input):
     if status == "ok":
         try:
             chat = await context.bot.get_chat(chat_id)
-
-            title = chat.title
-            if not title:
-                title = getattr(chat, "full_name", None)
-            if not title:
-                title = getattr(chat, "username", None)
-            if not title:
-                title = str(chat_id)
-
+            title = chat.title or getattr(chat, "full_name", None) or getattr(chat, "username", None) or str(chat_id)
             add_channel(chat_id, title=title)
-            await update.message.reply_text(
-                message,
-                reply_markup=back_button("menu_back")
-            )
 
-            hour, minute = get_channel_time(chat_id)
-            schedule_channel(chat_id, hour, minute)
+            times = get_channel_times(chat_id)
+            if not times:
+                time_id = add_channel_time(chat_id, 0, 1)
+                if time_id:
+                    schedule_channel_time(chat_id, time_id, 0, 1)
+
+            await update.message.reply_text(message, reply_markup=back_button("menu_back"))
         except Exception as e:
             await update.message.reply_text(
-                f"وضعیت: خطا در ذخیره‌سازی\n\n"
-                f"جزئیات: {str(e)[:200]}",
+                f"وضعیت: خطا در ذخیره‌سازی\n\nجزئیات: {str(e)[:200]}",
                 reply_markup=back_button("menu_add")
             )
     else:
-        await update.message.reply_text(
-            message,
-            reply_markup=back_button("menu_add")
-        )
+        await update.message.reply_text(message, reply_markup=back_button("menu_add"))
 
 
 async def handle_admin_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -1257,7 +1087,7 @@ async def handle_admin_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await process_channel_id(update, context, text)
         context.user_data["awaiting"] = None
 
-    elif awaiting == "channel_time":
+    elif awaiting == "new_channel_time":
         chat_id = context.user_data.get("channel_id")
         if not chat_id:
             context.user_data["awaiting"] = None
@@ -1270,30 +1100,33 @@ async def handle_admin_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
             if not (0 <= hour <= 23 and 0 <= minute <= 59):
                 raise ValueError("out of range")
 
-            set_channel_time(chat_id, hour, minute)
-
+            time_id = add_channel_time(chat_id, hour, minute)
             title = get_channel_title(chat_id)
             display = title if title else chat_id
-
             context.user_data["awaiting"] = None
-            context.user_data["channel_id"] = None
+
+            if time_id is None:
+                await update.message.reply_text(
+                    f"وضعیت: تکراری\n\nزمان {hour:02d}:{minute:02d} قبلاً ثبت شده است.",
+                    reply_markup=back_button(f"times_{chat_id}")
+                )
+                return
+
+            schedule_channel_time(chat_id, time_id, hour, minute)
 
             await update.message.reply_text(
-                f"وضعیت: انجام شد\n\n"
-                f"زمان ارسال کانال «{display}» به {hour:02d}:{minute:02d} تغییر یافت.",
-                reply_markup=back_button(f"ch_{chat_id}")
+                f"وضعیت: انجام شد\n\nزمان {hour:02d}:{minute:02d} برای کانال «{display}» اضافه شد.",
+                reply_markup=back_button(f"times_{chat_id}")
             )
-
-            restart_channel_job(chat_id)
 
         except Exception:
             await update.message.reply_text(
-                "وضعیت: خطا در پردازش\n\n"
-                "قالب زمان نامعتبر است. لطفاً به صورت HH:MM ارسال نمایید.\n"
-                "نمونه: 08:00",
-                reply_markup=back_button(f"ch_{chat_id}")
+                "وضعیت: خطا در پردازش\n\nقالب زمان نامعتبر است. لطفاً به صورت HH:MM ارسال نمایید.\nنمونه: 08:00",
+                reply_markup=back_button(f"times_{chat_id}")
             )
 
+
+# ==================== Flask ====================
 
 flask_app = Flask(__name__)
 
@@ -1322,20 +1155,15 @@ async def process_update_async(update_data):
 @flask_app.route("/webhook", methods=["POST"])
 def webhook():
     global app_telegram, main_loop
-
     if not app_telegram or main_loop is None:
         return "OK", 200
-
     try:
         update_data = request.get_json(silent=True)
         if not update_data:
             return "OK", 200
-
         asyncio.run_coroutine_threadsafe(
-            process_update_async(update_data),
-            main_loop
+            process_update_async(update_data), main_loop
         )
-
         return "OK", 200
     except Exception as e:
         print(f"Webhook error: {e}")
@@ -1346,16 +1174,22 @@ async def main_async():
     global app_telegram, main_loop
 
     main_loop = asyncio.get_running_loop()
-
     init_db()
 
-    app_telegram = ApplicationBuilder().token(BOT_TOKEN).build()
+    # ⚠️ غیرفعال کردن JobQueue داخلی PTB
+    app_telegram = (
+        ApplicationBuilder()
+        .token(BOT_TOKEN)
+        .job_queue(None)
+        .build()
+    )
 
     app_telegram.add_handler(CommandHandler("start", start_command))
     app_telegram.add_handler(CommandHandler("admin", admin_panel))
     app_telegram.add_handler(CallbackQueryHandler(button_handler))
     app_telegram.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND, handle_admin_text
+        filters.User(ADMIN_ID) & filters.TEXT & ~filters.COMMAND,
+        handle_admin_text
     ))
 
     await app_telegram.initialize()
@@ -1368,8 +1202,7 @@ async def main_async():
         try:
             await app_telegram.bot.delete_webhook(drop_pending_updates=True)
             await app_telegram.bot.set_webhook(
-                url=webhook_url,
-                drop_pending_updates=True,
+                url=webhook_url, drop_pending_updates=True,
                 allowed_updates=["message", "callback_query"]
             )
             print(f"Webhook set: {webhook_url}")
@@ -1390,5 +1223,4 @@ def run_flask():
 if __name__ == "__main__":
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
-
     asyncio.run(main_async())
