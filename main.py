@@ -1,0 +1,1085 @@
+import os
+import asyncio
+import sqlite3
+import logging
+import threading
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+import requests
+import jdatetime
+from flask import Flask, request
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import (
+    ApplicationBuilder, CommandHandler, CallbackQueryHandler,
+    MessageHandler, filters, ContextTypes
+)
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+
+logging.basicConfig(
+    format='[%(levelname)s %(asctime)s] %(name)s: %(message)s',
+    level=logging.INFO
+)
+
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+ADMIN_ID = int(os.environ.get("ADMIN_ID", "0"))
+RENDER_URL = os.environ.get("RENDER_EXTERNAL_URL", "")
+TIMEZONE = "Asia/Tehran"
+DB_NAME = "daily_bot.db"
+
+WEEKDAYS_FA = [
+    "دوشنبه", "سه‌شنبه", "چهارشنبه",
+    "پنجشنبه", "جمعه", "شنبه", "یکشنبه"
+]
+
+MONTHS_FA = [
+    "فروردین", "اردیبهشت", "خرداد",
+    "تیر", "مرداد", "شهریور",
+    "مهر", "آبان", "آذر",
+    "دی", "بهمن", "اسفند"
+]
+
+CITIES = {
+    "تهران": (35.6892, 51.3890),
+    "کرمانشاه": (34.3142, 47.0650),
+    "مشهد": (36.2605, 59.6168),
+    "اصفهان": (32.6546, 51.6680),
+    "تبریز": (38.0800, 46.2919),
+    "شیراز": (29.5918, 52.5837),
+}
+
+CRYPTOS = [
+    {"symbol": "BTC", "coinpaprika_id": "btc-bitcoin", "nobitex": "btc"},
+    {"symbol": "USDT", "coinpaprika_id": "usdt-tether", "nobitex": "usdt"},
+    {"symbol": "ETH", "coinpaprika_id": "eth-ethereum", "nobitex": "eth"},
+    {"symbol": "GRAM", "coinpaprika_id": "ton-toncoin", "nobitex": "ton"},
+    {"symbol": "XRP", "coinpaprika_id": "xrp-xrp", "nobitex": "xrp"},
+    {"symbol": "TRX", "coinpaprika_id": "trx-tron", "nobitex": "trx"},
+]
+
+MOTIVATIONAL_MESSAGES = [
+    "به خودت ایمان داشته باش\nتو از آن چیزی که فکر می‌کنی قوی‌تری",
+    "هر روز یک شروع جدید است\nدیروز تمام شد، امروز از آن توست",
+    "هیچ‌وقت دیر نیست\nبهترین زمان برای شروع، همین لحظه است",
+    "رؤیاهایت ارزش تلاش دارند\nبرای رسیدن به آن‌ها بکوش",
+    "موفقیت یک‌شبه به دست نمی‌آید\nولی هر روز یک قدم به آن نزدیک‌تر می‌شوی",
+    "به خودت سخت نگیر\nتو داری بهترین تلاشت را می‌کنی",
+    "زندگی کوتاه‌تر از آن است که ناراحت باشی\nلبخند بزن",
+    "هر سختی، درسی در خود دارد\nاز آن بیاموز و ادامه بده",
+    "تو قوی‌تر از مشکلات هستی\nفقط باید باور کنی",
+    "امروز را با انرژی آغاز کن\nفردا از امروزت سپاسگزار خواهد بود",
+    "نگران نباش، همه چیز درست می‌شود\nفقط به زمان نیاز داری",
+    "خودت را با کسی مقایسه نکن\nهر کس مسیر خودش را دارد",
+    "گاهی شکست، بهترین معلم است\nاز آن فرار نکن",
+    "بهترین نسخه‌ی خودت باش\nنیازی نیست شبیه کسی باشی",
+    "هر روز که بیدار می‌شوی، فرصتی تازه است\nاز آن بهره ببر",
+    "آرامش را در درون خود جستجو کن\nنه در بیرون",
+    "کارهایی که امروز انجام می‌دهی\nآینده‌ات را می‌سازند",
+    "به خودت وقت بده\nمهم‌ترین چیز در زندگی، خودت هستی",
+    "هیچ‌کس کامل نیست\nولی همه می‌توانند بهتر شوند",
+    "امید داشته باش\nبهترین روزها در راهند",
+    "زندگی سرشار از فرصت‌هاست\nفقط باید آن‌ها را ببینی",
+    "گاهی باید رها کرد\nتا چیزهای بهتر بیایند",
+    "به مسیری که رفته‌ای افتخار کن\nهمه‌ی راه‌ها ارزشمندند",
+    "قلبت را دنبال کن\nهمیشه راه درست را نشانت می‌دهد",
+    "هیچ طوفانی همیشگی نیست\nخورشید دوباره خواهد درخشید",
+    "به خودت اعتماد کن\nتو می‌توانی",
+    "یک قدم کوچک هم، یک قدم است\nاز جا برخیز",
+    "امروز روز توست\nاز آن نهایت استفاده را ببر",
+    "زندگی برای زندگی کردن است\nنه برای نگرانی",
+    "هر پایانی، شروعی تازه است\nبه استقبالش برو",
+    "شروع کن، حتی اگر کامل نباشی\nکامل شدن در مسیر اتفاق می‌افتد",
+    "شکست، پایان راه نیست\nفقط یک پیچ در مسیر است",
+    "تو همانی که باید باشی\nبه خودت افتخار کن",
+    "قلبِ شکسته، درسِ بزرگی دارد\nاز آن محکم‌تر بیرون می‌آیی",
+    "هر روز فرصتی برای تغییر است\nاز همین امروز شروع کن",
+    "به جای گریه بر گذشته\nبرای آینده لبخند بزن",
+    "خودت را دوست داشته باش\nهمان‌طور که هستی",
+    "در میان سختی‌ها، زیبایی را ببین\nاین هنر زندگی است",
+    "آرام باش، تو در مسیر درستی هستی\nفقط به خودت ایمان داشته باش",
+    "آنچه می‌کاری، برداشت می‌کنی\nامروز بذری از خوبی بکار",
+    "هر نفسی، هدیه‌ای است\nشکرگزار باش",
+    "از اشتباهاتت درس بگیر\nولی خودت را سرزنش نکن",
+    "مسیر مهم‌تر از مقصد است\nاز مسیر لذت ببر",
+    "آنچه می‌ترسی از آن، در واقع در حال رشد توست\nپیش برو",
+    "لبخندت، سلاح مخفی توست\nاز آن استفاده کن",
+    "در اوج تردید، ایمان را انتخاب کن\nو پیش برو",
+    "زندگی مجموعی از لحظه‌هاست\nاین لحظه را زندگی کن",
+    "خودت را ببخش\nتو هم انسان هستی",
+    "رشد، در ناپایداری است\nاز منطقه‌ی امن بیرون بیا",
+    "هر روز، بهترین روز زندگی است\nاگر خودت بخواهی",
+    "هیچ‌کس نمی‌داند فردا چه می‌شود\nولی امروز در دستان توست",
+    "با شکوه زندگی کن، نه با ترس\nزندگی برای زندگی کردن است",
+    "به دیگران نیکی کن\nدنیا پر از خوبی است",
+    "هر صبح، فرصت دوباره است\nآن را هدر نده",
+    "تو نور خاص خودت را داری\nآن را پنهان نکن",
+    "باور کن که می‌توانی\nچون واقعاً می‌توانی",
+    "زندگی، آینه‌ی افکار توست\nفکرت را زیبا کن",
+    "از شکست نترس\nبزرگ‌ترین‌ها بارها شکست خورده‌اند",
+    "در سکوت، پاسخ‌ها را خواهی یافت\nآرام باش",
+    "هر روز خودت را بهتر کن\nحتی یک قدم کوچک",
+    "کاری که می‌توانی، امروز انجام بده\nفردا تضمینی نیست",
+    "مهربان باش، به خود و به دیگران\nاین زیبایی است",
+    "به هیچ‌کس اجازه نده رویاهایت را کوچک کند\nادامه بده",
+    "سرنوشت در دستان توست\nانتخاب کن",
+    "آرزو نکن، تلاش کن\nآرزو به تنهایی کافی نیست",
+    "در دل سختی، فرصت پنهان است\nآن را پیدا کن",
+    "خودت را باور کن\nو جهان با تو هماهنگ می‌شود",
+    "از چیزی که می‌خواهی دور نشو\nبه سمتش بدو",
+    "شادی، انتخابی است\nپس انتخابش کن",
+    "زندگی، سفر است نه مسابقه\nآرام پیش برو",
+    "هر روز، چیزی برای یادگیری داری\nذهنت را باز نگه دار",
+    "بخشش، آزادی می‌آورد\nخودت را آزاد کن",
+    "به خودت فرصت بده\nرشد، زمان می‌خواهد",
+    "درون تو، قدرتی نهفته است\nآن را بیدار کن",
+    "زندگی، زیبایی در سادگی است\nساده ببین",
+    "بهترین سرمایه‌گذاری، خودت هستی\nروی خودت کار کن",
+    "با عشق زندگی کن\nعشق، همه چیز را زیبا می‌کند",
+    "از هیچ چیز پشیمان نباش\nهمه چیز درسی بوده",
+    "با شور و اشتیاق زندگی کن\nشور، زندگی را زیبا می‌کند",
+    "امروز، خودت را وقف رویاهایت کن\nآن‌ها ارزشش را دارند",
+    "سفر هزار مایل، با یک قدم آغاز می‌شود\nپس شروع کن",
+    "به جای حسرت، شکرگزاری کن\nزندگی همین است",
+    "سرعتت مهم نیست\nجهت مهم است",
+    "در انتظار بهترین‌ها باش\nولی برای آن‌ها تلاش کن",
+    "زندگی، یک فرصت است\nآن را قدر بدان",
+    "به خودت احترام بگذار\nتو ارزش آن را داری",
+    "از مسیر لذت ببر، نه از مقصد\nاین راز شادی است",
+    "در مقابل سختی‌ها، تسلیم نشو\nتو قوی‌تر هستی",
+    "هر صبح، یک هدیه است\nشکرگزار باش",
+    "با اعتماد به نفس پیش برو\nجهان راه را برایت باز می‌کند",
+    "هیچ محدودیتی وجود ندارد\nفقط ذهن توست",
+    "با توکل پیش برو\nراه هموار می‌شود",
+    "تو می‌توانی، چون باور داری\nایمانت قوی است",
+    "بهترین روزهای زندگی، هنوز نیامده‌اند\nامیدوار باش",
+    "از شکست نترس\nاین پل موفقیت است",
+    "روی خودت سرمایه‌گذاری کن\nارزشمندترین کار",
+    "در هر شرایطی، زیبایی را ببین\nاین قدرت توست",
+    "خودت را همان‌طور که هستی بپذیر\nکامل باش",
+    "با آرامش، مسیرت را ادامه بده\nآرامش، قدرت است",
+    "تو یک معجزه هستی\nباور کن",
+    "هیچ چیز غیرممکن نیست\nفقط ذهن باید باور کند",
+    "در هر چالشی، فرصت رشد است\nبه دنبال آن باش",
+    "زندگی، ساده‌تر از آن است که فکر می‌کنی\nساده بگیر",
+    "با شجاعت قدم بردار\nشجاعت، در انتخاب است",
+    "از خودت مراقبت کن\nتو مهم‌ترین شخص زندگی خودت هستی",
+    "با امید زندگی کن\nامید، راه را روشن می‌کند",
+    "خودت را محدود نکن\nتو بی‌نهایت توانمندی",
+    "به آینه نگاه کن و بگو\nمن می‌توانم",
+    "در سخت‌ترین لحظات، قوی‌ترین خودت باش\nاین هنر است",
+    "با لبخند، جهان را زیباتر کن\nلبخند مسری است",
+    "برای رویاهایت بجنگ\nچون ارزشش را دارند",
+    "در هر روز، یه معجزه است\nآن را ببین",
+    "با انگیزه بیدار شو\nروزت را زیبا کن",
+    "از دیروز بهتر باش\nاین معنای پیشرفت است",
+    "خودت را وقف چیزی کن\nزندگی هدفمند، زیباست",
+    "به مسیری که می‌روی ایمان داشته باش\nادامه بده",
+    "در دنیای پرهیاهو، آرام بمان\nآرامش، گنج است",
+    "با عشق به خودت، شروع کن\nعشق به خود، پایه‌ی همه چیز است",
+    "درون خودت را کشف کن\nگنجینه‌ای در تو نهفته",
+    "هر روز، یک فرصت طلایی است\nآن را غنیمت بشمار",
+    "با توکل و تلاش، به هدف برس\nترکیب برنده همین است",
+    "در هر لحظه، انتخابی داری\nانتخاب‌هایت را آگاهانه بگیر",
+    "خودت را بالا ببر\nپرواز کن",
+    "با آرامش، مشکلات حل می‌شوند\nآرام باش",
+    "از خودت بپرس: بهترین نسخه‌ی من کیست؟\nو آن شو",
+    "با لبخند، زندگی را رنگین کن\nرنگین‌کمانی در توست",
+    "در تاریکی، نور خودت باش\nبدرخش",
+    "به خودت اعتماد کن\nتو قوی‌تر از آنی که فکر می‌کنی",
+    "برای خودت وقت بگذار\nارزشمندترین سرمایه‌گذاری",
+    "با امید، زندگی را ادامه بده\nامید، سوخت زندگی است",
+    "هر روز، یک هدیه است\nشکرگزار باش",
+    "از تجربه‌هایت استفاده کن\nآن‌ها گنج هستند",
+    "با قلب، تصمیم بگیر\nقلب دروغ نمی‌گوید",
+    "به خودت عشق بورز\nعشق به خود، اولین قدم است",
+    "با اهداف روشن پیش برو\nهدف، ستاره‌ی راه است",
+    "در هر قدم، شکرگزار باش\nشکرگزاری، زندگی را زیبا می‌کند",
+    "از زندگیت لذت ببر\nاین لحظه، تنها لحظه‌ای است که داری",
+    "با اعتماد، به خودت ایمان داشته باش\nایمان، قدرتمندترین نیروست",
+    "هر چالشی، یک فرصت است\nفقط باور کن",
+    "با آرامش، به پیش برو\nآرامش، اوج قدرت است",
+    "خودت را از هیچ‌کس کمتر ندان\nهمه برابرند",
+    "با امید، به فردا لبخند بزن\nفردا، امروزِ دیروز است",
+    "از شکست‌هایت، پله بساز\nبه سوی موفقیت",
+    "در هر لحظه، بهترین خودت باش\nچون این زندگی توست",
+    "با عشق به دیگران، به خودت عشق بورز\nعشق، چرخه‌ای است",
+    "از نعمت‌های زندگیت شکرگزار باش\nشکرگزاری، آرامش می‌آورد",
+    "با توکل به خدا، آرام باش\nآرامش، بزرگ‌ترین ثروت است",
+    "در هر سختی، فرجی هست\nاین وعده‌ی الهی است",
+    "خودت را از قفس ذهن آزاد کن\nآزادی، در ذهن است",
+    "با شکرگزاری، روزت را آغاز کن\nشکر، درهای خوبی را باز می‌کند",
+    "هر روز یک شروع جدید است\nاز امروز بهترین خودت باش",
+]
+
+_cache = {}
+CACHE_TTL = 1800
+
+scheduler = None
+channel_jobs = {}
+
+app_telegram = None
+main_loop = None
+_bot_info_cache = [None]
+
+
+def _cache_get(key):
+    if key in _cache:
+        value, ts = _cache[key]
+        if (datetime.now().timestamp() - ts) < CACHE_TTL:
+            return value
+        del _cache[key]
+    return None
+
+
+def _cache_set(key, value):
+    _cache[key] = (value, datetime.now().timestamp())
+
+
+def init_db():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        )
+    """)
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS channels (
+            chat_id TEXT PRIMARY KEY,
+            title TEXT,
+            send_hour INTEGER DEFAULT 0,
+            send_minute INTEGER DEFAULT 1,
+            added_at TEXT
+        )
+    """)
+    c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('default_hour', '0')")
+    c.execute("INSERT OR IGNORE INTO settings (key, value) VALUES ('default_minute', '1')")
+    conn.commit()
+    conn.close()
+
+
+def get_setting(key, default=None):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT value FROM settings WHERE key = ?", (key,))
+    row = c.fetchone()
+    conn.close()
+    return row[0] if row else default
+
+
+def set_setting(key, value):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+              (key, str(value)))
+    conn.commit()
+    conn.close()
+
+
+def add_channel(chat_id, title=""):
+    default_hour = int(get_setting("default_hour", "0"))
+    default_minute = int(get_setting("default_minute", "1"))
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        INSERT OR REPLACE INTO channels
+        (chat_id, title, send_hour, send_minute, added_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (str(chat_id), title, default_hour, default_minute,
+          datetime.now().isoformat()))
+    conn.commit()
+    conn.close()
+
+
+def get_channels():
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT chat_id, title, send_hour, send_minute FROM channels")
+    rows = c.fetchall()
+    conn.close()
+    return rows
+
+
+def get_channel_title(chat_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT title FROM channels WHERE chat_id = ?", (str(chat_id),))
+    row = c.fetchone()
+    conn.close()
+    return row[0] if row else ""
+
+
+def get_channel_time(chat_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("SELECT send_hour, send_minute FROM channels WHERE chat_id = ?",
+              (str(chat_id),))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return row[0], row[1]
+    return 0, 1
+
+
+def set_channel_time(chat_id, hour, minute):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("""
+        UPDATE channels SET send_hour = ?, send_minute = ?
+        WHERE chat_id = ?
+    """, (int(hour), int(minute), str(chat_id)))
+    conn.commit()
+    conn.close()
+
+
+def delete_channel(chat_id):
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    c.execute("DELETE FROM channels WHERE chat_id = ?", (str(chat_id),))
+    conn.commit()
+    conn.close()
+
+
+def get_cached_bot_info(bot):
+    return _bot_info_cache[0]
+
+
+async def check_channel_status(bot, chat_id):
+    try:
+        chat = await bot.get_chat(chat_id)
+        admins = await bot.get_chat_administrators(chat_id)
+
+        if _bot_info_cache[0] is None:
+            _bot_info_cache[0] = await bot.get_me()
+        bot_id = _bot_info_cache[0].id
+
+        is_admin = False
+        can_post = False
+
+        for admin in admins:
+            if admin.user.id == bot_id:
+                is_admin = True
+                if admin.can_post_messages:
+                    can_post = True
+                break
+
+        if not is_admin:
+            return "not_admin", (
+                f"وضعیت: عدم دسترسی مدیریتی\n\n"
+                f"کانال: «{chat.title}»\n\n"
+                f"ربات در این کانال دارای دسترسی مدیریتی نیست.\n"
+                f"لطفاً جهت فعال‌سازی، مراحل زیر را انجام دهید:\n\n"
+                f"۱. ورود به تنظیمات کانال\n"
+                f"۲. بخش مدیریت (Administrators)\n"
+                f"۳. افزودن ربات به عنوان مدیر\n"
+                f"۴. فعال‌سازی دسترسی «ارسال پیام»"
+            )
+
+        if not can_post:
+            return "not_admin", (
+                f"وضعیت: عدم دسترسی ارسال\n\n"
+                f"کانال: «{chat.title}»\n\n"
+                f"ربات در این کانال دارای دسترسی مدیریتی است، "
+                f"اما مجوز ارسال پیام برای آن فعال نشده است.\n"
+                f"لطفاً دسترسی «ارسال پیام» را فعال نمایید."
+            )
+
+        return "ok", (
+            f"وضعیت: تأیید شد\n\n"
+            f"کانال: «{chat.title}»\n\n"
+            f"ربات با موفقیت به فهرست کانال‌ها افزوده شد."
+        )
+
+    except Exception as e:
+        error_str = str(e).lower()
+
+        if "chat not found" in error_str:
+            return "error", (
+                "وضعیت: خطا در شناسایی\n\n"
+                "کانال مورد نظر یافت نشد.\n\n"
+                "دلایل احتمالی:\n"
+                "• شناسه وارد شده نامعتبر است\n"
+                "• ربات عضو کانال نیست\n"
+                "• کانال خصوصی است و ربات به آن دسترسی ندارد"
+            )
+
+        if "not enough rights" in error_str or "forbidden" in error_str:
+            return "not_member", (
+                "وضعیت: عدم عضویت\n\n"
+                "ربات عضو کانال مورد نظر نیست یا دسترسی کافی ندارد.\n\n"
+                "لطفاً جهت رفع مشکل:\n"
+                "۱. ربات را به کانال اضافه نمایید\n"
+                "۲. ربات را به عنوان مدیر منصوب کنید\n"
+                "۳. مجدداً تلاش نمایید"
+            )
+
+        return "error", (
+            f"وضعیت: خطای غیرمنتظره\n\n"
+            f"جزئیات: {str(e)[:200]}"
+        )
+
+
+def to_persian_date(dt):
+    try:
+        return jdatetime.date.fromgregorian(date=dt)
+    except Exception:
+        return None
+
+
+def get_date_info():
+    tz = ZoneInfo(TIMEZONE)
+    now = datetime.now(tz)
+
+    weekday_fa = WEEKDAYS_FA[now.weekday()]
+
+    j_date = to_persian_date(now.date())
+
+    if j_date:
+        jalali_str = f"{j_date.day} {MONTHS_FA[j_date.month - 1]} {j_date.year}"
+    else:
+        jalali_str = "—"
+
+    gregorian_str = now.strftime("%d %B %Y")
+    gregorian_months_fa = {
+        "January": "ژانویه", "February": "فوریه", "March": "مارس",
+        "April": "آپریل", "May": "مه", "June": "ژوئن",
+        "July": "جولای", "August": "اوت", "September": "سپتامبر",
+        "October": "اکتبر", "November": "نوامبر", "December": "دسامبر"
+    }
+    for en, fa in gregorian_months_fa.items():
+        gregorian_str = gregorian_str.replace(en, fa)
+
+    return {
+        "weekday": weekday_fa,
+        "jalali": jalali_str,
+        "gregorian": gregorian_str,
+    }
+
+
+def get_todays_motivation():
+    tz = ZoneInfo(TIMEZONE)
+    now = datetime.now(tz)
+    day_of_year = now.timetuple().tm_yday
+    index = (day_of_year - 1) % len(MOTIVATIONAL_MESSAGES)
+    return MOTIVATIONAL_MESSAGES[index]
+
+
+def get_weather():
+    results = []
+    for city, (lat, lon) in CITIES.items():
+        try:
+            url = (
+                f"https://api.open-meteo.com/v1/forecast"
+                f"?latitude={lat}&longitude={lon}"
+                f"&current=temperature_2m,weather_code"
+                f"&timezone=Asia/Tehran"
+            )
+            resp = requests.get(url, timeout=8)
+            data = resp.json()
+            current = data.get("current", {})
+            temp = current.get("temperature_2m")
+            code = current.get("weather_code")
+
+            desc = {
+                0: "آفتابی ☀️", 1: "نیمه‌ابری 🌤️", 2: "ابری ⛅", 3: "ابری ☁️",
+                45: "مه 🌫️", 48: "مه یخ‌زده 🌫️",
+                51: "نم‌نم باران 🌦️", 53: "باران سبک 🌧️", 55: "باران 🌧️",
+                61: "باران ملایم 🌦️", 63: "باران 🌧️", 65: "باران شدید 🌧️",
+                71: "برف سبک 🌨️", 73: "برف 🌨️", 75: "برف شدید 🌨️",
+                95: "رعد و برق ⛈️", 96: "رعد و برق با تگرگ ⛈️",
+                99: "طوفان شدید ⛈️"
+            }.get(code, "نامشخص")
+
+            results.append(f"🌡️ {city}: {int(temp)}°C | {desc}")
+        except Exception as e:
+            print(f"Weather {city}: {e}")
+            results.append(f"🌡️ {city}: —")
+    return results
+
+
+def get_prayer_times():
+    try:
+        lat, lon = CITIES["تهران"]
+        url = (
+            f"https://api.aladhan.com/v1/timings"
+            f"?latitude={lat}&longitude={lon}"
+            f"&method=7"
+            f"&timezone=Asia/Tehran"
+        )
+        resp = requests.get(url, timeout=8)
+        data = resp.json()
+
+        if data.get("code") != 200:
+            return None
+
+        timings = data["data"]["timings"]
+        return {
+            "fajr": timings.get("Fajr", "—"),
+            "sunrise": timings.get("Sunrise", "—"),
+            "dhuhr": timings.get("Dhuhr", "—"),
+            "maghrib": timings.get("Maghrib", "—"),
+            "isha": timings.get("Isha", "—"),
+        }
+    except Exception as e:
+        print(f"Prayer: {e}")
+        return None
+
+
+def get_crypto_price_usd(coinpaprika_id):
+    cache_key = f"usd_{coinpaprika_id}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    try:
+        url = f"https://api.coinpaprika.com/v1/tickers/{coinpaprika_id}"
+        resp = requests.get(url, timeout=8)
+        data = resp.json()
+        price = data.get("quotes", {}).get("USD", {}).get("price")
+        if price:
+            _cache_set(cache_key, price)
+            return price
+    except Exception as e:
+        print(f"CoinPaprika {coinpaprika_id}: {e}")
+    return None
+
+
+def get_crypto_price_toman(nobitex_symbol):
+    cache_key = f"toman_{nobitex_symbol}"
+    cached = _cache_get(cache_key)
+    if cached:
+        return cached
+
+    try:
+        url = "https://apiv2.nobitex.ir/market/stats"
+        params = {"srcCurrency": nobitex_symbol, "dstCurrency": "rls"}
+        resp = requests.get(url, params=params, timeout=8)
+        data = resp.json()
+
+        if data.get("status") == "ok":
+            stats = data.get("stats", {})
+            key = f"{nobitex_symbol}-rls"
+            if key in stats:
+                price_rls = stats[key].get("latest")
+                if price_rls:
+                    price_toman = int(float(price_rls)) // 10
+                    _cache_set(cache_key, price_toman)
+                    return price_toman
+    except Exception as e:
+        print(f"Nobitex {nobitex_symbol}: {e}")
+    return None
+
+
+def format_price(value):
+    if value is None:
+        return "—"
+    if value >= 1000:
+        return f"{value:,.0f}"
+    if value >= 1:
+        return f"{value:,.2f}"
+    return f"{value:,.4f}"
+
+
+def build_crypto_section():
+    lines = []
+    for crypto in CRYPTOS:
+        symbol = crypto["symbol"]
+        usd = get_crypto_price_usd(crypto["coinpaprika_id"])
+        toman = get_crypto_price_toman(crypto["nobitex"])
+
+        usd_str = f"${format_price(usd)}" if usd else "—"
+        toman_str = f"{toman:,} تومان" if toman else "—"
+
+        lines.append(f"{symbol}: {usd_str} / {toman_str}")
+
+    lines.append("GOLD (18): —")
+    lines.append("OIL (Brent): —")
+
+    return lines
+
+
+def build_daily_message():
+    date_info = get_date_info()
+    weather = get_weather()
+    prayers = get_prayer_times()
+    crypto = build_crypto_section()
+    motivation = get_todays_motivation()
+
+    text = ""
+    text += f"📅 {date_info['weekday']} {date_info['jalali']}\n"
+    text += f"🌍 {date_info['gregorian']}\n\n"
+    text += "━━━━━━━━━━━━━━\n\n"
+
+    text += "☁️ وضعیت آب و هوای ایران\n\n"
+    for w in weather:
+        text += f"{w}\n"
+
+    text += "\n━━━━━━━━━━━━━━\n\n"
+
+    if prayers:
+        text += "🕌 اوقات شرعی (تهران)\n\n"
+        text += f"🌅 اذان صبح: {prayers['fajr']}\n"
+        text += f"☀️ طلوع آفتاب: {prayers['sunrise']}\n"
+        text += f"🌞 اذان ظهر: {prayers['dhuhr']}\n"
+        text += f"🌇 اذان مغرب: {prayers['maghrib']}\n"
+        text += f"🌙 اذان عشا: {prayers['isha']}\n\n"
+        text += "━━━━━━━━━━━━━━\n\n"
+
+    text += "💰 قیمت ارز و طلا\n\n"
+    for c in crypto:
+        text += f"{c}\n"
+
+    text += "\n━━━━━━━━━━━━━━\n\n"
+    text += f"💫 {motivation}"
+
+    return text
+
+
+def schedule_channel(chat_id, hour, minute):
+    global scheduler
+
+    if scheduler is None:
+        return
+
+    job_id = f"channel_{chat_id}"
+
+    if job_id in channel_jobs:
+        try:
+            channel_jobs[job_id].remove()
+        except Exception:
+            pass
+        del channel_jobs[job_id]
+
+    try:
+        job = scheduler.add_job(
+            send_to_channel,
+            CronTrigger(hour=hour, minute=minute, timezone=TIMEZONE),
+            args=[chat_id],
+            id=job_id,
+            replace_existing=True
+        )
+        channel_jobs[job_id] = job
+        print(f"زمان‌بندی {chat_id} - {hour:02d}:{minute:02d}")
+    except Exception as e:
+        print(f"خطا در زمان‌بندی {chat_id}: {e}")
+
+
+async def send_to_channel(chat_id):
+    global app_telegram
+    if not app_telegram:
+        return
+    try:
+        message = await asyncio.to_thread(build_daily_message)
+        await app_telegram.bot.send_message(
+            chat_id=chat_id,
+            text=message,
+            parse_mode="Markdown"
+        )
+        print(f"ارسال موفق به {chat_id}")
+    except Exception as e:
+        print(f"خطا در ارسال به {chat_id}: {e}")
+
+
+def start_scheduler():
+    global scheduler
+
+    if scheduler:
+        try:
+            for job_id in list(channel_jobs.keys()):
+                try:
+                    channel_jobs[job_id].remove()
+                except Exception:
+                    pass
+            channel_jobs.clear()
+            scheduler.shutdown(wait=False)
+        except Exception as e:
+            print(f"Scheduler shutdown error: {e}")
+
+    scheduler = AsyncIOScheduler(timezone=TIMEZONE)
+    scheduler.start()
+
+    channels = get_channels()
+    for chat_id, title, hour, minute in channels:
+        schedule_channel(chat_id, hour, minute)
+
+    print(f"Scheduler started - {len(channels)} channels")
+
+
+def restart_channel_job(chat_id):
+    hour, minute = get_channel_time(chat_id)
+    schedule_channel(chat_id, hour, minute)
+
+
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        await update.message.reply_text(
+            "این ربات تنها برای مدیر سامانه قابل استفاده است."
+        )
+        return
+    await update.message.reply_text(
+        "برای دسترسی به پنل مدیریت، از دستور /admin استفاده نمایید."
+    )
+
+
+async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    keyboard = [
+        [InlineKeyboardButton("➕ افزودن کانال", callback_data="menu_add")],
+        [InlineKeyboardButton("📋 مدیریت کانال‌ها", callback_data="menu_list")],
+        [InlineKeyboardButton("📤 ارسال فوری", callback_data="menu_sendnow")],
+    ]
+
+    await update.message.reply_text(
+        "مدیریت ربات\n\n"
+        "لطفاً یکی از گزینه‌های زیر را انتخاب نمایید:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
+
+async def button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    if query.from_user.id != ADMIN_ID:
+        return
+
+    data = query.data
+
+    if data == "menu_add":
+        context.user_data["awaiting"] = "channel_id"
+        await query.edit_message_text(
+            "افزودن کانال\n\n"
+            "لطفاً شناسه یا نشانی کانال مورد نظر را ارسال نمایید.\n\n"
+            "نمونه‌ها:\n"
+            "• @my_channel\n"
+            "• -1001234567890\n"
+            "• https://t.me/my_channel\n\n"
+            "توجه: ربات باید از قبل در کانال عضو و به عنوان مدیر منصوب شده باشد."
+        )
+
+    elif data == "menu_list":
+        channels = get_channels()
+        if not channels:
+            await query.edit_message_text(
+                "مدیریت کانال‌ها\n\n"
+                "در حال حاضر هیچ کانالی ثبت نشده است."
+            )
+            return
+
+        keyboard = []
+        for cid, title, hour, minute in channels:
+            display = title if title else cid
+            keyboard.append([
+                InlineKeyboardButton(
+                    f"📢 {display} ({hour:02d}:{minute:02d})",
+                    callback_data=f"ch_{cid}"
+                )
+            ])
+        keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data="menu_back")])
+
+        await query.edit_message_text(
+            "مدیریت کانال‌ها\n\n"
+            "لطفاً کانال مورد نظر را انتخاب نمایید:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+    elif data == "menu_sendnow":
+        channels = get_channels()
+        if not channels:
+            await query.edit_message_text(
+                "ارسال فوری\n\n"
+                "در حال حاضر هیچ کانالی ثبت نشده است."
+            )
+            return
+
+        keyboard = []
+        for cid, title, hour, minute in channels:
+            display = title if title else cid
+            keyboard.append([
+                InlineKeyboardButton(f"📢 {display}", callback_data=f"sendnow_{cid}")
+            ])
+        keyboard.append([InlineKeyboardButton("🔙 بازگشت", callback_data="menu_back")])
+
+        await query.edit_message_text(
+            "ارسال فوری\n\n"
+            "لطفاً کانال مورد نظر را انتخاب نمایید:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+    elif data.startswith("ch_"):
+        chat_id = data.replace("ch_", "")
+        title = get_channel_title(chat_id)
+        display = title if title else chat_id
+        hour, minute = get_channel_time(chat_id)
+        current_time = f"{hour:02d}:{minute:02d}"
+
+        keyboard = [
+            [InlineKeyboardButton("📤 ارسال فوری", callback_data=f"sendnow_{chat_id}")],
+            [InlineKeyboardButton(
+                f"⏰ تنظیم زمان (فعلی: {current_time})",
+                callback_data=f"settime_{chat_id}"
+            )],
+            [InlineKeyboardButton("🗑️ حذف کانال", callback_data=f"del_{chat_id}")],
+            [InlineKeyboardButton("🔙 بازگشت", callback_data="menu_list")],
+        ]
+
+        await query.edit_message_text(
+            f"کانال: «{display}»\n\n"
+            f"زمان ارسال: {current_time}\n\n"
+            f"لطفاً عملیات مورد نظر را انتخاب نمایید:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+    elif data.startswith("settime_"):
+        chat_id = data.replace("settime_", "")
+        title = get_channel_title(chat_id)
+        display = title if title else chat_id
+        hour, minute = get_channel_time(chat_id)
+        current_time = f"{hour:02d}:{minute:02d}"
+
+        context.user_data["awaiting"] = "channel_time"
+        context.user_data["channel_id"] = chat_id
+
+        await query.edit_message_text(
+            f"تنظیم زمان ارسال\n\n"
+            f"کانال: «{display}»\n"
+            f"زمان فعلی: {current_time}\n\n"
+            f"لطفاً زمان جدید را به قالب HH:MM ارسال نمایید.\n"
+            f"نمونه: 08:00"
+        )
+
+    elif data.startswith("del_"):
+        chat_id = data.replace("del_", "")
+        delete_channel(chat_id)
+
+        job_id = f"channel_{chat_id}"
+        if job_id in channel_jobs:
+            try:
+                channel_jobs[job_id].remove()
+                del channel_jobs[job_id]
+            except Exception:
+                pass
+
+        await query.edit_message_text(
+            "وضعیت: انجام شد\n\n"
+            "کانال مورد نظر از فهرست حذف گردید."
+        )
+
+    elif data.startswith("sendnow_"):
+        chat_id = data.replace("sendnow_", "")
+        try:
+            message = await asyncio.to_thread(build_daily_message)
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text=message,
+                parse_mode="Markdown"
+            )
+            await query.edit_message_text(
+                "وضعیت: انجام شد\n\n"
+                "پیام مورد نظر با موفقیت ارسال گردید."
+            )
+        except Exception as e:
+            await query.edit_message_text(
+                f"وضعیت: خطا در ارسال\n\n"
+                f"جزئیات: {str(e)[:200]}"
+            )
+
+    elif data == "menu_back":
+        keyboard = [
+            [InlineKeyboardButton("➕ افزودن کانال", callback_data="menu_add")],
+            [InlineKeyboardButton("📋 مدیریت کانال‌ها", callback_data="menu_list")],
+            [InlineKeyboardButton("📤 ارسال فوری", callback_data="menu_sendnow")],
+        ]
+        await query.edit_message_text(
+            "مدیریت ربات\n\n"
+            "لطفاً یکی از گزینه‌های زیر را انتخاب نمایید:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
+        )
+
+
+async def process_channel_id(update, context, channel_input):
+    channel_input = channel_input.strip()
+
+    if "t.me/" in channel_input:
+        try:
+            channel_input = channel_input.split("t.me/")[1].split("/")[0]
+            if not channel_input.startswith("-"):
+                channel_input = "@" + channel_input
+        except Exception:
+            await update.message.reply_text(
+                "وضعیت: خطا در پردازش\n\n"
+                "لینک وارد شده نامعتبر است."
+            )
+            return
+
+    chat_id = channel_input
+
+    await update.message.reply_text("در حال بررسی کانال...")
+
+    status, message = await check_channel_status(context.bot, chat_id)
+
+    if status == "ok":
+        try:
+            chat = await context.bot.get_chat(chat_id)
+            add_channel(chat_id, title=chat.title or "")
+            await update.message.reply_text(message)
+
+            hour, minute = get_channel_time(chat_id)
+            schedule_channel(chat_id, hour, minute)
+        except Exception as e:
+            await update.message.reply_text(
+                f"وضعیت: خطا در ذخیره‌سازی\n\n"
+                f"جزئیات: {str(e)[:200]}"
+            )
+    else:
+        await update.message.reply_text(message)
+
+
+async def handle_admin_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if update.effective_user.id != ADMIN_ID:
+        return
+
+    awaiting = context.user_data.get("awaiting")
+    text = update.message.text.strip()
+
+    if awaiting == "channel_id":
+        await process_channel_id(update, context, text)
+        context.user_data["awaiting"] = None
+
+    elif awaiting == "channel_time":
+        chat_id = context.user_data.get("channel_id")
+        if not chat_id:
+            context.user_data["awaiting"] = None
+            return
+
+        try:
+            hour, minute = text.split(":")
+            hour = int(hour)
+            minute = int(minute)
+            if not (0 <= hour <= 23 and 0 <= minute <= 59):
+                raise ValueError("out of range")
+
+            set_channel_time(chat_id, hour, minute)
+
+            title = get_channel_title(chat_id)
+            display = title if title else chat_id
+
+            context.user_data["awaiting"] = None
+            context.user_data["channel_id"] = None
+
+            await update.message.reply_text(
+                f"وضعیت: انجام شد\n\n"
+                f"زمان ارسال کانال «{display}» به {hour:02d}:{minute:02d} تغییر یافت."
+            )
+
+            restart_channel_job(chat_id)
+
+        except Exception:
+            await update.message.reply_text(
+                "وضعیت: خطا در پردازش\n\n"
+                "قالب زمان نامعتبر است. لطفاً به صورت HH:MM ارسال نمایید.\n"
+                "نمونه: 08:00"
+            )
+
+
+flask_app = Flask(__name__)
+
+
+@flask_app.route("/", methods=["GET"])
+def index():
+    return "Daily Bot is running", 200
+
+
+@flask_app.route("/health", methods=["GET"])
+def health():
+    return "OK", 200
+
+
+async def process_update_async(update_data):
+    global app_telegram
+    if not app_telegram:
+        return
+    try:
+        update = Update.de_json(update_data, app_telegram.bot)
+        await app_telegram.process_update(update)
+    except Exception as e:
+        print(f"Process update error: {e}")
+
+
+@flask_app.route("/webhook", methods=["POST"])
+def webhook():
+    global app_telegram, main_loop
+
+    if not app_telegram or main_loop is None:
+        return "OK", 200
+
+    try:
+        update_data = request.get_json(silent=True)
+        if not update_data:
+            return "OK", 200
+
+        asyncio.run_coroutine_threadsafe(
+            process_update_async(update_data),
+            main_loop
+        )
+
+        return "OK", 200
+    except Exception as e:
+        print(f"Webhook error: {e}")
+        return "OK", 200
+
+
+async def main_async():
+    global app_telegram, main_loop
+
+    main_loop = asyncio.get_running_loop()
+
+    init_db()
+
+    app_telegram = ApplicationBuilder().token(BOT_TOKEN).build()
+
+    app_telegram.add_handler(CommandHandler("start", start_command))
+    app_telegram.add_handler(CommandHandler("admin", admin_panel))
+    app_telegram.add_handler(CallbackQueryHandler(button_handler))
+    app_telegram.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND, handle_admin_text
+    ))
+
+    await app_telegram.initialize()
+    await app_telegram.start()
+
+    start_scheduler()
+
+    if RENDER_URL:
+        webhook_url = f"{RENDER_URL}/webhook"
+        try:
+            await app_telegram.bot.delete_webhook(drop_pending_updates=True)
+            await app_telegram.bot.set_webhook(
+                url=webhook_url,
+                drop_pending_updates=True,
+                allowed_updates=["message", "callback_query"]
+            )
+            print(f"Webhook set: {webhook_url}")
+        except Exception as e:
+            print(f"Webhook error: {e}")
+
+    print("ربات روشن شد...")
+
+    while True:
+        await asyncio.sleep(60)
+
+
+def run_flask():
+    port = int(os.environ.get("PORT", 8080))
+    flask_app.run(host="0.0.0.0", port=port, threaded=True)
+
+
+if __name__ == "__main__":
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
+
+    asyncio.run(main_async())
