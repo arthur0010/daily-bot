@@ -59,12 +59,12 @@ CITY_COORDS = {
 }
 
 CRYPTOS = [
-    {"symbol": "BTC", "coingecko_id": "bitcoin", "coinpaprika_id": "btc-bitcoin", "nobitex": "btc"},
-    {"symbol": "USDT", "coingecko_id": "tether", "coinpaprika_id": "usdt-tether", "nobitex": "usdt"},
-    {"symbol": "ETH", "coingecko_id": "ethereum", "coinpaprika_id": "eth-ethereum", "nobitex": "eth"},
-    {"symbol": "GRAM", "coingecko_id": "the-open-network", "coinpaprika_id": "ton-toncoin", "nobitex": "ton"},
-    {"symbol": "XRP", "coingecko_id": "ripple", "coinpaprika_id": "xrp-xrp", "nobitex": "xrp"},
-    {"symbol": "TRX", "coingecko_id": "tron", "coinpaprika_id": "trx-tron", "nobitex": "trx"},
+    {"symbol": "BTC", "coingecko_id": "bitcoin", "coinpaprika_id": "btc-bitcoin", "nobitex": "btc", "binance": "BTCUSDT"},
+    {"symbol": "USDT", "coingecko_id": "tether", "coinpaprika_id": "usdt-tether", "nobitex": "usdt", "binance": None},
+    {"symbol": "ETH", "coingecko_id": "ethereum", "coinpaprika_id": "eth-ethereum", "nobitex": "eth", "binance": "ETHUSDT"},
+    {"symbol": "GRAM", "coingecko_id": "the-open-network", "coinpaprika_id": "ton-toncoin", "nobitex": "ton", "binance": "TONUSDT"},
+    {"symbol": "XRP", "coingecko_id": "ripple", "coinpaprika_id": "xrp-xrp", "nobitex": "xrp", "binance": "XRPUSDT"},
+    {"symbol": "TRX", "coingecko_id": "tron", "coinpaprika_id": "trx-tron", "nobitex": "trx", "binance": "TRXUSDT"},
 ]
 
 MOTIVATIONAL_MESSAGES = [
@@ -489,14 +489,23 @@ def get_weather():
         "Overcast": "ابری ☁️",
         "Mist": "مه 🌫️",
         "Fog": "مه 🌫️",
+        "Freezing fog": "مه یخ‌زده 🌫️",
+        "Haze": "مه‌آلود 🌫️",
+        "Smoky haze": "دودآلود 🌫️",
         "Light rain": "باران سبک 🌦️",
+        "Light drizzle": "نم‌نم 🌦️",
         "Light rain shower": "باران سبک 🌦️",
         "Patchy rain nearby": "باران پراکنده 🌦️",
+        "Patchy rain possible": "احتمال باران 🌦️",
+        "Patchy light rain": "باران سبک پراکنده 🌦️",
         "Rain": "باران 🌧️",
         "Moderate rain": "باران 🌧️",
         "Heavy rain": "باران شدید 🌧️",
+        "Moderate or heavy rain shower": "باران شدید 🌧️",
         "Snow": "برف 🌨️",
         "Light snow": "برف سبک 🌨️",
+        "Blowing snow": "برف همراه با باد 🌨️",
+        "Blizzard": "کولاک ❄️",
         "Thunderstorm": "رعد و برق ⛈️",
     }
 
@@ -512,9 +521,11 @@ def get_weather():
 
             current = data.get("current_condition", [{}])[0]
             temp = current.get("temp_C", "—")
-            desc_en = current.get("weatherDesc", [{}])[0].get("value", "")
+            desc_en = current.get("weatherDesc", [{}])[0].get("value", "").strip()
 
-            desc = desc_map.get(desc_en, desc_en or "نامشخص")
+            desc = desc_map.get(desc_en)
+            if not desc:
+                desc = "نامشخص"
 
             results.append(f"🌡️ {city_fa}: {temp}°C | {desc}")
         except Exception as e:
@@ -553,49 +564,45 @@ def get_prayer_times():
 
 
 def get_crypto_prices_usd_batch():
-    """قیمت دلاری همه‌ی ارزها رو با یک درخواست Batch می‌گیره"""
     cache_key = "usd_batch"
     cached = _cache_get(cache_key)
     if cached:
         return cached
 
-    gecko_ids = ",".join([c["coingecko_id"] for c in CRYPTOS])
+    prices = {"tether": 1.0}
 
-    for attempt in range(2):
-        try:
-            url = (
-                f"https://api.coingecko.com/api/v3/simple/price"
-                f"?ids={gecko_ids}&vs_currencies=usd"
-            )
-            resp = requests.get(url, timeout=10)
-            data = resp.json()
-
-            if isinstance(data, dict) and data:
-                prices = {}
-                for crypto in CRYPTOS:
-                    gid = crypto["coingecko_id"]
-                    if gid in data:
-                        prices[gid] = data[gid].get("usd")
-                    else:
-                        prices[gid] = None
-
-                _cache_set(cache_key, prices)
-                return prices
-        except Exception as e:
-            print(f"CoinGecko batch attempt {attempt + 1}: {e}")
-
-    prices = {}
     for crypto in CRYPTOS:
-        cp_id = crypto["coinpaprika_id"]
-        try:
-            url = f"https://api.coinpaprika.com/v1/tickers/{cp_id}"
-            resp = requests.get(url, timeout=6)
-            data = resp.json()
-            price = data.get("quotes", {}).get("USD", {}).get("price")
-            prices[crypto["coingecko_id"]] = price
-        except Exception as e:
-            print(f"CoinPaprika {cp_id}: {e}")
-            prices[crypto["coingecko_id"]] = None
+        symbol = crypto["symbol"]
+        gid = crypto["coingecko_id"]
+
+        if symbol == "USDT":
+            prices[gid] = 1.0
+            continue
+
+        binance_sym = crypto.get("binance")
+        price = None
+
+        if binance_sym:
+            try:
+                url = f"https://api.binance.com/api/v3/ticker/price?symbol={binance_sym}"
+                resp = requests.get(url, timeout=8)
+                data = resp.json()
+                p = float(data.get("price", 0))
+                if p > 0:
+                    price = p
+            except Exception as e:
+                print(f"Binance {symbol}: {e}")
+
+        if price is None:
+            try:
+                url = f"https://api.coinpaprika.com/v1/tickers/{crypto['coinpaprika_id']}"
+                resp = requests.get(url, timeout=6)
+                data = resp.json()
+                price = data.get("quotes", {}).get("USD", {}).get("price")
+            except Exception as e:
+                print(f"CoinPaprika {symbol}: {e}")
+
+        prices[gid] = price
 
     _cache_set(cache_key, prices)
     return prices
